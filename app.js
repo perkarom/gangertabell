@@ -430,6 +430,30 @@ if (typeof document !== 'undefined') {
 
   renderHome();
 
+  /* Installera-knapp */
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  let installEvt = null;
+  if (!standalone) $('#install-btn').hidden = false;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installEvt = e;
+    $('#install-btn').hidden = false;
+  });
+  $('#install-btn').addEventListener('click', async () => {
+    if (installEvt) {
+      installEvt.prompt();
+      const r = await installEvt.userChoice;
+      installEvt = null;
+      if (r.outcome === 'accepted') $('#install-btn').hidden = true;
+    } else {
+      $('#install-help').hidden = !$('#install-help').hidden;
+    }
+  });
+  window.addEventListener('appinstalled', () => {
+    $('#install-btn').hidden = true;
+    $('#install-help').hidden = true;
+  });
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }

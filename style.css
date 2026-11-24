@@ -84,6 +84,13 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
 }
 .small-btn.danger { color: var(--bad); }
 
+.install-help {
+  margin: 0; padding: 12px 14px; border-radius: 16px;
+  background: var(--card); text-align: center; font-weight: 600; line-height: 1.45;
+}
+.install-help small { color: var(--muted); }
+[hidden] { display: none !important; }
+
 /* Topbar */
 .topbar { display: flex; align-items: center; gap: 10px; min-height: 52px; }
 .back {
