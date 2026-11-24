@@ -134,8 +134,40 @@ function level(s) {
   return 'bad';
 }
 
+/* Säkerhetskopia av statistiken */
+function makeBackup(d) {
+  return {
+    app: 'gangerkungen', version: 1, saved: new Date().toISOString(),
+    stats: d.stats, records: d.records, stars: d.stars, totalRight: d.totalRight,
+  };
+}
+
+// Returnerar rensad data, eller kastar ett fel med ett begripligt meddelande.
+function parseBackup(text) {
+  let b;
+  try { b = JSON.parse(text); } catch (e) { throw new Error('Filen går inte att läsa.'); }
+  if (!b || b.app !== 'gangerkungen' || typeof b.stats !== 'object' || !b.stats) {
+    throw new Error('Det här är ingen statistikfil från Gångerkungen.');
+  }
+  const num = (x) => (Number.isFinite(x) && x >= 0 ? Math.round(x) : 0);
+  const stats = {};
+  for (const [k, v] of Object.entries(b.stats)) {
+    const m = /^(10|[1-9])x(10|[1-9])$/.exec(k);
+    if (!m || !v || typeof v !== 'object') continue;
+    const s = { right: num(v.right), wrong: num(v.wrong), avgMs: num(v.avgMs) };
+    if (Array.isArray(v.recent)) s.recent = v.recent.filter((x) => x === 0 || x === 1).slice(-RECENT);
+    stats[k] = s;
+  }
+  return {
+    stats: mergeStats(stats),
+    records: { time: num(b.records && b.records.time) },
+    stars: num(b.stars),
+    totalRight: num(b.totalRight),
+  };
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -457,6 +489,45 @@ if (typeof document !== 'undefined') {
     if (!confirm('Vill du verkligen nollställa all statistik, rekord och stjärnor?')) return;
     data.stats = {}; data.records = { time: 0 }; data.stars = 0; data.totalRight = 0;
     save(); renderStats();
+  });
+
+  /* Spara / hämta statistik */
+  $('#backup-save').addEventListener('click', async () => {
+    const text = JSON.stringify(makeBackup(data), null, 1);
+    const name = 'gangerkungen-statistik-' + new Date().toISOString().slice(0, 10) + '.json';
+    // Mobilen: dela-menyn (spara i Filer/Drive, skicka till sig själv). Annars: vanlig nedladdning.
+    try {
+      const file = new File([text], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Gångerkungen – statistik' });
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // användaren stängde dela-menyn
+    }
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
+
+  $('#backup-load').addEventListener('click', () => $('#backup-file').click());
+  $('#backup-file').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const b = parseBackup(await f.text());
+      const n = Object.keys(b.stats).length;
+      if (!confirm('Hämta statistiken från filen?\n\n' + n + ' övade tal, ' + b.stars + ' stjärnor, rekord ' +
+        b.records.time + '.\n\nDet ersätter statistiken som finns i appen nu.')) return;
+      Object.assign(data, b);
+      save(); renderStats();
+      alert('Klart! Statistiken är hämtad. 👑');
+    } catch (err) {
+      alert(err.message || 'Filen gick inte att läsa.');
+    }
   });
 
   /* Konfetti */

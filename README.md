@@ -44,9 +44,15 @@ Varje tal får en vikt utifrån de **5 senaste svaren** på just det talet:
 
 Svar från **alla lägen** räknas, och **7×8 och 8×7 räknas som samma tal**. Svarar man rätt 5 gånger i rad på ett tal kommer det sällan igen. Ett nytt fel gör att det kommer oftare igen.
 
+## Spara och hämta statistik
+
+Under **Min statistik** finns **💾 Spara statistik** och **📥 Hämta statistik**. Spara skapar en liten fil (`gangerkungen-statistik-ÅÅÅÅ-MM-DD.json`) som du kan lägga i Filer, Google Drive eller skicka till dig själv. Hämta läser in filen igen och ersätter statistiken som finns i appen.
+
+Spara statistiken innan du tar bort appen eller byter telefon. På iPhone raderas statistiken när appen tas bort från hemskärmen.
+
 ## Integritet
 
-All statistik sparas bara på enheten (`localStorage`). Appen skickar ingen data någonstans och har inga konton, ingen reklam och ingen spårning.
+All statistik sparas bara på enheten (`localStorage`), och en sparad statistikfil hamnar där du själv väljer. Appen skickar ingen data någonstans och har inga konton, ingen reklam och ingen spårning.
 
 ## Teknik
 

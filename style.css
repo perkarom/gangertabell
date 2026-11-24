@@ -193,3 +193,11 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
   display: inline-block; border: 2px solid currentColor; border-radius: 6px;
   padding: 0 4px; font-size: .9em; line-height: 1.2;
 }
+
+.backup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.backup-btn {
+  min-height: 52px; border-radius: 16px; background: var(--card);
+  font-weight: 800; font-size: 1.05rem; box-shadow: 0 4px 0 rgba(0,0,0,.1);
+}
+.backup-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.1); }
+.backup-hint { margin: 0; text-align: center; color: var(--muted); font-weight: 600; font-size: .9rem; }
