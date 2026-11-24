@@ -20,7 +20,9 @@
     <header class="home-head">
       <img class="logo" src="icons/icon-192.png" alt="">
       <h1>Gångerkungen</h1>
-      <p class="sub" id="home-stars">⭐ 0 stjärnor</p>
+      <button class="player-chip" data-go="players" aria-label="Byt spelare">
+        <span id="chip-avatar"></span> <b id="chip-name"></b> <span id="chip-stars"></span> <span class="chip-switch">⇄</span>
+      </button>
     </header>
     <div class="menu">
       <button class="big c1" data-go="pick">🎯 Välj tabell</button>
@@ -84,7 +86,7 @@
 
   <!-- STATISTIK -->
   <section id="view-stats" class="view">
-    <div class="topbar"><button class="back" data-go="home">‹</button><h2>Min statistik</h2></div>
+    <div class="topbar"><button class="back" data-go="home">‹</button><h2 id="stats-title">Min statistik</h2></div>
     <div id="stats-summary" class="stats-summary"></div>
     <div id="stats-grid" class="stats-grid"></div>
     <div class="legend">
@@ -100,6 +102,24 @@
     </div>
     <p class="backup-hint">Spara innan du tar bort appen eller byter telefon.</p>
     <button id="stats-reset" class="small-btn danger">Nollställ statistik</button>
+  </section>
+
+  <!-- SPELARE -->
+  <section id="view-players" class="view">
+    <div class="topbar"><button class="back" data-go="home">‹</button><h2>Vem spelar?</h2></div>
+    <div id="player-list" class="player-list"></div>
+    <button class="big c2" id="player-add">➕ Ny spelare</button>
+  </section>
+
+  <!-- NY / ÄNDRA SPELARE -->
+  <section id="view-edit" class="view">
+    <div class="topbar"><button class="back" id="edit-back">‹</button><h2 id="edit-title">Vad heter du?</h2></div>
+    <input id="edit-name" class="name-input" type="text" maxlength="12" placeholder="Skriv ditt namn"
+           autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done">
+    <p class="hint">Välj ett djur</p>
+    <div id="avatar-grid" class="avatar-grid"></div>
+    <button id="edit-save" class="big c5" disabled>Klar ✔︎</button>
+    <button id="edit-delete" class="small-btn danger" hidden>Ta bort spelare</button>
   </section>
 
   <div id="confetti"></div>

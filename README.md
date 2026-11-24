@@ -16,6 +16,8 @@ Ett roligt sätt för barn att träna **multiplikationstabellerna 1–10**. Gån
 | 💪 **Öva svåra tal** | Tal du ofta svarar fel på eller tänker länge på kommer oftare. |
 | 📊 **Min statistik** | Hela tabellen i färg: grönt = kan, gult = nästan, rött = svår. |
 
+**Spelare:** första gången får man skriva sitt namn och välja ett djur. Flera barn kan spela på samma telefon. Tryck på namnet på startsidan för att byta spelare eller lägga till en ny. Varje spelare har egen statistik, egna stjärnor och eget rekord.
+
 - Stora sifferknappar direkt på skärmen, så att mobilens tangentbord inte täcker frågan.
 - Svarar man fel visas rätt svar, och samma fråga kommer tillbaka lite senare i omgången.
 - 1–3 stjärnor per omgång, konfetti vid perfekt resultat och nytt rekord.
@@ -46,7 +48,7 @@ Svar från **alla lägen** räknas, och **7×8 och 8×7 räknas som samma tal**.
 
 ## Spara och hämta statistik
 
-Under **Min statistik** finns **💾 Spara statistik** och **📥 Hämta statistik**. Spara skapar en liten fil (`gangerkungen-statistik-ÅÅÅÅ-MM-DD.json`) som du kan lägga i Filer, Google Drive eller skicka till dig själv. Hämta läser in filen igen och ersätter statistiken som finns i appen.
+Under **Min statistik** finns **💾 Spara statistik** och **📥 Hämta statistik**. Spara skapar en liten fil för spelaren som är vald (`gangerkungen-namn-ÅÅÅÅ-MM-DD.json`) som du kan lägga i Filer, Google Drive eller skicka till dig själv. Hämta läser in filen och ersätter statistiken för spelaren som är vald.
 
 Spara statistiken innan du tar bort appen eller byter telefon. På iPhone raderas statistiken när appen tas bort från hemskärmen.
 

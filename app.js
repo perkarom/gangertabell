@@ -166,8 +166,50 @@ function parseBackup(text) {
   };
 }
 
+/* Spelare */
+const AVATARS = ['🦁', '🐯', '🐼', '🦊', '🐸', '🐵', '🦄', '🐲', '🐬', '🦖', '🐱', '🐶', '🐰', '🐨', '🐧', '🐙'];
+const NAME_MAX = 12;
+
+function cleanName(s) {
+  return String(s || '').replace(/\s+/g, ' ').trim().slice(0, NAME_MAX);
+}
+
+function newPlayer(name, avatar) {
+  return {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: cleanName(name), avatar: AVATARS.includes(avatar) ? avatar : AVATARS[0],
+    stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, picked: [],
+  };
+}
+
+// Läser sparad data (v2 = med spelare). Finns bara gammal v1-data blir den en spelare utan namn.
+function loadStore(v2text, v1text) {
+  const empty = { players: [], current: null, sound: true };
+  try {
+    const r = JSON.parse(v2text);
+    if (r && Array.isArray(r.players)) {
+      r.players.forEach((p) => { p.stats = mergeStats(p.stats); p.records = p.records || { time: 0 }; });
+      if (!r.players.some((p) => p.id === r.current)) r.current = r.players[0] ? r.players[0].id : null;
+      if (typeof r.sound !== 'boolean') r.sound = true;
+      return r;
+    }
+  } catch (e) { /* ingen v2 */ }
+  try {
+    const d = JSON.parse(v1text);
+    if (d && d.stats) {
+      const p = newPlayer('', AVATARS[0]);
+      Object.assign(p, {
+        stats: mergeStats(d.stats), records: d.records || { time: 0 },
+        stars: d.stars || 0, totalRight: d.totalRight || 0, picked: d.picked || [],
+      });
+      return { players: [p], current: p.id, sound: d.sound !== false };
+    }
+  } catch (e) { /* ingen v1 */ }
+  return empty;
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -175,18 +217,14 @@ if (typeof document !== 'undefined') {
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
 
-  /* Lagring */
-  const STORE = 'gangertabell-v1';
-  function load() {
-    try {
-      const d = JSON.parse(localStorage.getItem(STORE));
-      if (d && d.stats) { d.stats = mergeStats(d.stats); return d; }
-    } catch (e) { /* ignorera */ }
-    return { stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, sound: true, picked: [] };
-  }
-  const data = load();
+  /* Lagring: root = alla spelare + inställningar, data = aktiv spelare */
+  const STORE = 'gangerkungen-v2';
+  const OLD_STORE = 'gangertabell-v1'; // lämnas orörd som reserv
+  function readLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  const root = loadStore(readLS(STORE), readLS(OLD_STORE));
+  let data = root.players.find((p) => p.id === root.current) || null;
   function save() {
-    try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (e) { /* ignorera */ }
+    try { localStorage.setItem(STORE, JSON.stringify(root)); } catch (e) { /* ignorera */ }
   }
 
   /* Ljud */
@@ -203,7 +241,7 @@ if (typeof document !== 'undefined') {
     document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
 
   function beep(ok) {
-    if (!data.sound) return;
+    if (!root.sound) return;
     try {
       unlockAudio();
       if (!audio) return;
@@ -230,6 +268,7 @@ if (typeof document !== 'undefined') {
     if (name === 'home') renderHome();
     if (name === 'stats') renderStats();
     if (name === 'pick') renderPick();
+    if (name === 'players') renderPlayers();
     window.scrollTo(0, 0);
   }
   document.addEventListener('click', (e) => {
@@ -240,17 +279,21 @@ if (typeof document !== 'undefined') {
   });
 
   function renderHome() {
-    $('#home-stars').textContent = '⭐ ' + data.stars + (data.stars === 1 ? ' stjärna' : ' stjärnor');
-    $('#sound-toggle').textContent = data.sound ? '🔊 Ljud på' : '🔇 Ljud av';
+    if (!data) return;
+    $('#chip-avatar').textContent = data.avatar;
+    $('#chip-name').textContent = data.name;
+    $('#chip-stars').textContent = '⭐ ' + data.stars;
+    $('#sound-toggle').textContent = root.sound ? '🔊 Ljud på' : '🔇 Ljud av';
   }
   $('#sound-toggle').addEventListener('click', () => {
-    data.sound = !data.sound; save(); renderHome();
-    if (data.sound) { unlockAudio(); beep(true); }
+    root.sound = !root.sound; save(); renderHome();
+    if (root.sound) { unlockAudio(); beep(true); }
   });
 
   /* Välj tabell */
-  let picked = new Set(data.picked || []);
+  let picked = new Set();
   function renderPick() {
+    picked = new Set(data.picked || []);
     const g = $('#pick-grid');
     g.innerHTML = '';
     for (let i = 1; i <= 10; i++) {
@@ -438,14 +481,14 @@ if (typeof document !== 'undefined') {
       const isRec = g.correct > rec;
       if (isRec) data.records.time = g.correct;
       stars = g.correct >= 25 ? 3 : g.correct >= 15 ? 2 : g.correct >= 8 ? 1 : 0;
-      title = isRec && g.correct > 0 ? 'Nytt rekord! 🏆' : 'Tiden är ute!';
+      title = isRec && g.correct > 0 ? 'Nytt rekord, ' + data.name + '! 🏆' : 'Tiden är ute!';
       text = g.correct + ' rätt på ' + TIME_LIMIT + ' sekunder';
       extra = isRec ? (rec ? 'Förra rekordet var ' + rec : '') : 'Ditt rekord: ' + rec;
       if (isRec && g.correct > 0) confetti();
     } else {
       stars = starsFor(g.correct, g.total);
       const secs = Math.round((Date.now() - g.start) / 1000);
-      title = ['Bra kämpat! 💪', 'Bra jobbat! 👍', 'Jättebra! 🌟', 'Du är gångerkungen! 👑'][stars];
+      title = ['Bra kämpat, ', 'Bra jobbat, ', 'Jättebra, ', 'Du är gångerkungen, '][stars] + data.name + '! ' + ['💪', '👍', '🌟', '👑'][stars];
       text = g.correct + ' av ' + g.total + ' rätt direkt';
       extra = 'Tid: ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
       if (stars === 3) confetti();
@@ -464,6 +507,7 @@ if (typeof document !== 'undefined') {
 
   /* Statistik */
   function renderStats() {
+    $('#stats-title').textContent = data.avatar + ' ' + data.name;
     let practiced = 0, good = 0;
     for (let a = 1; a <= 10; a++) for (let b = 1; b <= 10; b++) {
       const l = level(data.stats[skey(a, b)]);
@@ -493,8 +537,9 @@ if (typeof document !== 'undefined') {
 
   /* Spara / hämta statistik */
   $('#backup-save').addEventListener('click', async () => {
-    const text = JSON.stringify(makeBackup(data), null, 1);
-    const name = 'gangerkungen-statistik-' + new Date().toISOString().slice(0, 10) + '.json';
+    const text = JSON.stringify({ ...makeBackup(data), name: data.name, avatar: data.avatar }, null, 1);
+    const safe = data.name.normalize('NFD').replace(/[^A-Za-z0-9]+/g, '').toLowerCase() || 'spelare';
+    const name = 'gangerkungen-' + safe + '-' + new Date().toISOString().slice(0, 10) + '.json';
     // Mobilen: dela-menyn (spara i Filer/Drive, skicka till sig själv). Annars: vanlig nedladdning.
     try {
       const file = new File([text], name, { type: 'application/json' });
@@ -520,8 +565,8 @@ if (typeof document !== 'undefined') {
     try {
       const b = parseBackup(await f.text());
       const n = Object.keys(b.stats).length;
-      if (!confirm('Hämta statistiken från filen?\n\n' + n + ' övade tal, ' + b.stars + ' stjärnor, rekord ' +
-        b.records.time + '.\n\nDet ersätter statistiken som finns i appen nu.')) return;
+      if (!confirm('Hämta statistiken från filen till ' + data.name + '?\n\n' + n + ' övade tal, ' + b.stars + ' stjärnor, rekord ' +
+        b.records.time + '.\n\nDet ersätter ' + data.name + 's statistik som finns i appen nu.')) return;
       Object.assign(data, b);
       save(); renderStats();
       alert('Klart! Statistiken är hämtad. 👑');
@@ -545,17 +590,110 @@ if (typeof document !== 'undefined') {
     }
   }
 
+  /* Spelare: välj / ny / ändra */
+  function renderPlayers() {
+    const list = $('#player-list');
+    list.innerHTML = '';
+    root.players.forEach((p) => {
+      const row = document.createElement('div');
+      row.className = 'player-row' + (data && p.id === data.id ? ' on' : '');
+      const pick = document.createElement('button');
+      pick.className = 'player-pick';
+      const av = document.createElement('span'); av.className = 'pav'; av.textContent = p.avatar;
+      const nm = document.createElement('span'); nm.className = 'pname'; nm.textContent = p.name;
+      const st = document.createElement('span'); st.className = 'pstars'; st.textContent = '⭐ ' + p.stars;
+      pick.append(av, nm, st);
+      pick.addEventListener('click', () => {
+        data = p; root.current = p.id; save(); show('home');
+      });
+      const edit = document.createElement('button');
+      edit.className = 'player-edit';
+      edit.setAttribute('aria-label', 'Ändra ' + p.name);
+      edit.textContent = '✏️';
+      edit.addEventListener('click', () => openEdit(p));
+      row.append(pick, edit);
+      list.appendChild(row);
+    });
+  }
+  $('#player-add').addEventListener('click', () => openEdit(null));
+
+  let editing = null; // spelaren som ändras, eller null för ny
+  let editAvatar = AVATARS[0];
+  function openEdit(p) {
+    editing = p || null;
+    const used = new Set(root.players.map((x) => x.avatar));
+    editAvatar = p ? p.avatar : (AVATARS.find((a) => !used.has(a)) || AVATARS[0]);
+    const first = !root.players.some((x) => x.name);
+    $('#edit-title').textContent = p && p.name ? 'Ändra spelare' : first ? 'Vad heter du?' : 'Ny spelare';
+    $('#edit-name').value = p ? p.name : '';
+    $('#edit-delete').hidden = !p || !p.name;
+    // Utan namngiven spelare finns inget att gå tillbaka till
+    $('#edit-back').hidden = !root.players.some((x) => x.name) || Boolean(p && !p.name);
+    renderAvatars();
+    checkEdit();
+    show('edit');
+  }
+  function renderAvatars() {
+    const g = $('#avatar-grid');
+    g.innerHTML = '';
+    AVATARS.forEach((a) => {
+      const b = document.createElement('button');
+      b.textContent = a;
+      b.classList.toggle('on', a === editAvatar);
+      b.addEventListener('click', () => { editAvatar = a; renderAvatars(); });
+      g.appendChild(b);
+    });
+  }
+  function checkEdit() {
+    $('#edit-save').disabled = cleanName($('#edit-name').value) === '';
+  }
+  $('#edit-name').addEventListener('input', checkEdit);
+  $('#edit-name').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); $('#edit-name').blur(); }
+  });
+  $('#edit-back').addEventListener('click', () => show(root.players.length > 1 ? 'players' : 'home'));
+  $('#edit-save').addEventListener('click', () => {
+    const name = cleanName($('#edit-name').value);
+    if (!name) return;
+    if (editing) {
+      editing.name = name;
+      editing.avatar = editAvatar;
+    } else {
+      editing = newPlayer(name, editAvatar);
+      root.players.push(editing);
+    }
+    data = editing; root.current = editing.id;
+    save();
+    show('home');
+  });
+  $('#edit-delete').addEventListener('click', () => {
+    if (!editing) return;
+    if (!confirm('Ta bort ' + editing.name + ' och all ' + editing.name + 's statistik?')) return;
+    root.players = root.players.filter((p) => p !== editing);
+    if (data === editing) data = root.players[0] || null;
+    root.current = data ? data.id : null;
+    save();
+    if (data) show('players'); else openEdit(null);
+  });
+
   // Androids tillbaka-knapp: gå till start istället för att stänga appen
   history.replaceState({ v: 'root' }, '');
   history.pushState({ v: 'app' }, '');
   window.addEventListener('popstate', () => {
     if (!$('#view-home').classList.contains('active')) {
+      // på namnsidan utan spelare finns ingen start att gå till
+      if ($('#view-edit').classList.contains('active') && $('#edit-back').hidden) {
+        history.pushState({ v: 'app' }, '');
+        return;
+      }
       stopTimer(); game = null; show('home');
       history.pushState({ v: 'app' }, '');
     }
   });
 
-  renderHome();
+  // Första start (eller gammal data utan namn): fråga efter namn
+  if (!data || !data.name) openEdit(data);
+  else renderHome();
 
   /* Installera-knapp */
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
