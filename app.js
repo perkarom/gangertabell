@@ -6,6 +6,8 @@ const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
 
 const key = (a, b) => a + 'x' + b;
+// Statistiknyckel: 7×8 och 8×7 räknas som samma tal
+const skey = (a, b) => key(Math.min(a, b), Math.max(a, b));
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -43,6 +45,23 @@ function buildRound(pool, n = ROUND_LEN) {
 
 const RECENT = 5; // bara de senaste svaren räknas för urval och färger
 
+// Slå ihop gammal statistik där 7×8 och 8×7 sparades var för sig
+function mergeStats(stats) {
+  const out = {};
+  for (const [k, v] of Object.entries(stats || {})) {
+    const [a, b] = k.split('x').map(Number);
+    const nk = skey(a, b);
+    const m = out[nk];
+    if (!m) { out[nk] = { ...v, recent: recentOf(v) }; continue; }
+    const n = m.right + v.right;
+    m.avgMs = n ? Math.round((m.avgMs * m.right + v.avgMs * v.right) / n) : 0;
+    m.right += v.right;
+    m.wrong += v.wrong;
+    m.recent = m.recent.concat(recentOf(v)).slice(-RECENT);
+  }
+  return out;
+}
+
 // Senaste svaren per tal: 1 = rätt, 0 = fel (äldst först).
 // Äldre sparad statistik utan "recent" översätts ungefärligt (fel räknas som senast).
 function recentOf(s) {
@@ -79,8 +98,9 @@ function weightedPick(items, weights) {
 }
 
 function buildHardRound(stats, n = ROUND_LEN) {
-  const pool = combos([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  const weights = pool.map((q) => weightFor(stats[key(q.a, q.b)]));
+  // 55 unika tal (a ≤ b) så att 6×6 inte kommer hälften så ofta som 7×8/8×7
+  const pool = combos([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).filter((q) => q.a <= q.b);
+  const weights = pool.map((q) => weightFor(stats[skey(q.a, q.b)]));
   const out = [];
   while (out.length < n) {
     const q = weightedPick(pool, weights);
@@ -115,7 +135,7 @@ function level(s) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, recentOf, addResult };
+  module.exports = { combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -128,7 +148,7 @@ if (typeof document !== 'undefined') {
   function load() {
     try {
       const d = JSON.parse(localStorage.getItem(STORE));
-      if (d && d.stats) return d;
+      if (d && d.stats) { d.stats = mergeStats(d.stats); return d; }
     } catch (e) { /* ignorera */ }
     return { stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, sound: true, picked: [] };
   }
@@ -326,7 +346,7 @@ if (typeof document !== 'undefined') {
     game.locked = true;
 
     // statistik
-    const k = key(q.a, q.b);
+    const k = skey(q.a, q.b);
     const s = data.stats[k] || { right: 0, wrong: 0, avgMs: 0 };
     if (ok) {
       s.avgMs = s.right ? Math.round(s.avgMs * 0.7 + Math.min(ms, 20000) * 0.3) : Math.min(ms, 20000);
@@ -414,7 +434,7 @@ if (typeof document !== 'undefined') {
   function renderStats() {
     let practiced = 0, good = 0;
     for (let a = 1; a <= 10; a++) for (let b = 1; b <= 10; b++) {
-      const l = level(data.stats[key(a, b)]);
+      const l = level(data.stats[skey(a, b)]);
       if (l !== 'none') practiced++;
       if (l === 'good') good++;
     }
@@ -428,7 +448,7 @@ if (typeof document !== 'undefined') {
     for (let a = 1; a <= 10; a++) {
       html += '<div class="hd">' + a + '</div>';
       for (let b = 1; b <= 10; b++) {
-        html += '<div class="s-' + level(data.stats[key(a, b)]) + '">' + a * b + '</div>';
+        html += '<div class="s-' + level(data.stats[skey(a, b)]) + '">' + a * b + '</div>';
       }
     }
     g.innerHTML = html;
