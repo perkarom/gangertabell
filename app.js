@@ -41,9 +41,29 @@ function buildRound(pool, n = ROUND_LEN) {
   return out.slice(0, n).map(withFlip);
 }
 
+const RECENT = 5; // bara de senaste svaren räknas för urval och färger
+
+// Senaste svaren per tal: 1 = rätt, 0 = fel (äldst först).
+// Äldre sparad statistik utan "recent" översätts ungefärligt (fel räknas som senast).
+function recentOf(s) {
+  if (!s) return [];
+  if (Array.isArray(s.recent)) return s.recent;
+  const r = [];
+  for (let i = 0; i < Math.min(s.right, RECENT); i++) r.push(1);
+  for (let i = 0; i < Math.min(s.wrong, RECENT); i++) r.push(0);
+  return r.slice(-RECENT);
+}
+
+function addResult(s, ok) {
+  s.recent = recentOf(s).concat(ok ? 1 : 0).slice(-RECENT);
+}
+
 function weightFor(s) {
-  if (!s) return 2; // ej övat — lite extra
-  let w = 1 + s.wrong * 3 - s.right * 0.4;
+  const r = recentOf(s);
+  if (!r.length) return 2; // ej övat — lite extra
+  const right = r.filter((x) => x).length;
+  const wrong = r.length - right;
+  let w = 1 + wrong * 3 - right * 0.4;
   if (s.avgMs > SLOW_MS) w += 2;
   return Math.max(0.3, w);
 }
@@ -85,15 +105,17 @@ function starsFor(correct, total) {
 }
 
 function level(s) {
-  if (!s || s.right + s.wrong === 0) return 'none';
-  const acc = s.right / (s.right + s.wrong);
-  if (acc >= 0.9 && s.right >= 3 && s.avgMs <= SLOW_MS) return 'good';
+  const r = recentOf(s);
+  if (!r.length) return 'none';
+  const right = r.filter((x) => x).length;
+  const acc = right / r.length;
+  if (acc === 1 && right >= 3 && s.avgMs <= SLOW_MS) return 'good';
   if (acc >= 0.7) return 'ok';
   return 'bad';
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key };
+  module.exports = { combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, recentOf, addResult };
 }
 
 /* ---------- UI ---------- */
@@ -313,6 +335,7 @@ if (typeof document !== 'undefined') {
     } else {
       s.wrong++;
     }
+    addResult(s, ok);
     data.stats[k] = s;
     save();
 
