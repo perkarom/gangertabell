@@ -357,7 +357,7 @@ if (typeof document !== 'undefined') {
     } else {
       stars = starsFor(g.correct, g.total);
       const secs = Math.round((Date.now() - g.start) / 1000);
-      title = ['Bra kämpat! 💪', 'Bra jobbat! 👍', 'Jättebra! 🌟', 'Perfekt! 🏆'][stars];
+      title = ['Bra kämpat! 💪', 'Bra jobbat! 👍', 'Jättebra! 🌟', 'Du är gångerkungen! 👑'][stars];
       text = g.correct + ' av ' + g.total + ' rätt direkt';
       extra = 'Tid: ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
       if (stars === 3) confetti();

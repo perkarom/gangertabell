@@ -1,7 +1,7 @@
 {
-  "name": "Gångertabellen",
-  "short_name": "Gånger",
-  "description": "Träna multiplikationstabellerna 1–10",
+  "name": "Gångerkungen",
+  "short_name": "Gångerkungen",
+  "description": "Bli kung på gångertabellen 1–10!",
   "lang": "sv",
   "start_url": "./",
   "scope": "./",
