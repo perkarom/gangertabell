@@ -489,6 +489,8 @@ if (typeof document !== 'undefined') {
   /* Installera-knapp */
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   let installEvt = null;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!standalone) $('#install-btn').hidden = false;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -496,18 +498,20 @@ if (typeof document !== 'undefined') {
     $('#install-btn').hidden = false;
   });
   $('#install-btn').addEventListener('click', async () => {
-    if (installEvt) {
+    if (installEvt && !isIOS) {
       installEvt.prompt();
       const r = await installEvt.userChoice;
       installEvt = null;
       if (r.outcome === 'accepted') $('#install-btn').hidden = true;
     } else {
-      $('#install-help').hidden = !$('#install-help').hidden;
+      const help = $(isIOS ? '#install-help-ios' : '#install-help');
+      help.hidden = !help.hidden;
     }
   });
   window.addEventListener('appinstalled', () => {
     $('#install-btn').hidden = true;
     $('#install-help').hidden = true;
+    $('#install-help-ios').hidden = true;
   });
 
   if ('serviceWorker' in navigator) {

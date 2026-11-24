@@ -1,6 +1,6 @@
-const CACHE = 'gangertabell-v7';
+const CACHE = 'gangertabell-v8';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png'];
+  'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/icon-512.png', 'icons/maskable-512.png'];
 
 self.addEventListener('install', (e) => {
   // cache: 'reload' = hämta förbi webbläsarens HTTP-cache så vi aldrig sparar gamla filer

@@ -189,3 +189,7 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
   background: var(--card); color: var(--purple);
   border: 3px dashed var(--purple); box-shadow: none; font-size: 1.2rem; min-height: 56px;
 }
+.ios-share {
+  display: inline-block; border: 2px solid currentColor; border-radius: 6px;
+  padding: 0 4px; font-size: .9em; line-height: 1.2;
+}
