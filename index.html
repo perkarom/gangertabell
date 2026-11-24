@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#6c4cf5">
+  <title>Gångertabellen</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- START -->
+  <section id="view-home" class="view active">
+    <header class="home-head">
+      <div class="logo">×</div>
+      <h1>Gångertabellen</h1>
+      <p class="sub" id="home-stars">⭐ 0 stjärnor</p>
+    </header>
+    <div class="menu">
+      <button class="big c1" data-go="pick">🎯 Välj tabell</button>
+      <button class="big c2" data-mode="mixed">🎲 Blandat 1–10</button>
+      <button class="big c3" data-mode="time">⏱️ Tidsutmaning</button>
+      <button class="big c4" data-mode="hard">💪 Öva svåra tal</button>
+      <button class="big c5" data-go="stats">📊 Min statistik</button>
+    </div>
+    <button id="sound-toggle" class="small-btn">🔊 Ljud på</button>
+  </section>
+
+  <!-- VÄLJ TABELL -->
+  <section id="view-pick" class="view">
+    <div class="topbar"><button class="back" data-go="home">‹</button><h2>Välj tabeller</h2></div>
+    <p class="hint">Tryck på en eller flera tabeller</p>
+    <div id="pick-grid" class="pick-grid"></div>
+    <button id="pick-start" class="big c1" disabled>Kör! 🚀</button>
+  </section>
+
+  <!-- ÖVNING -->
+  <section id="view-play" class="view">
+    <div class="topbar">
+      <button class="back" id="play-quit">‹</button>
+      <div id="play-progress" class="progress-text"></div>
+      <div id="play-score" class="score-pill"></div>
+    </div>
+    <div class="bar"><div id="play-bar"></div></div>
+    <div id="question-card" class="card">
+      <div id="question" class="question">7 × 8</div>
+      <div id="answer" class="answer">&nbsp;</div>
+      <div id="feedback" class="feedback">&nbsp;</div>
+    </div>
+    <div id="keypad" class="keypad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="del" class="k-del">⌫</button><button data-k="0">0</button><button data-k="ok" class="k-ok">OK</button>
+    </div>
+  </section>
+
+  <!-- RESULTAT -->
+  <section id="view-result" class="view">
+    <div class="result">
+      <div id="result-stars" class="result-stars"></div>
+      <h2 id="result-title"></h2>
+      <p id="result-text" class="result-text"></p>
+      <p id="result-extra" class="result-extra"></p>
+      <button id="result-again" class="big c2">Spela igen 🔁</button>
+      <button class="big c5" data-go="home">Till start 🏠</button>
+    </div>
+  </section>
+
+  <!-- STATISTIK -->
+  <section id="view-stats" class="view">
+    <div class="topbar"><button class="back" data-go="home">‹</button><h2>Min statistik</h2></div>
+    <div id="stats-summary" class="stats-summary"></div>
+    <div id="stats-grid" class="stats-grid"></div>
+    <div class="legend">
+      <span><i class="sw s-good"></i>Kan</span>
+      <span><i class="sw s-ok"></i>Nästan</span>
+      <span><i class="sw s-bad"></i>Svår</span>
+      <span><i class="sw s-none"></i>Ej övat</span>
+    </div>
+    <button id="stats-reset" class="small-btn danger">Nollställ statistik</button>
+  </section>
+
+  <div id="confetti"></div>
+  <script src="app.js"></script>
+</body>
+</html>
