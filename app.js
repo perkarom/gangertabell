@@ -117,10 +117,22 @@ if (typeof document !== 'undefined') {
 
   /* Ljud */
   let audio;
+  // Android/Chrome tillåter bara ljud efter ett "riktigt" tryck (när fingret släpps),
+  // så vi skapar/väcker ljudet då.
+  function unlockAudio() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state !== 'running') audio.resume();
+    } catch (e) { /* inget ljud */ }
+  }
+  ['pointerup', 'touchend', 'click', 'keydown'].forEach((ev) =>
+    document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
+
   function beep(ok) {
     if (!data.sound) return;
     try {
-      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      unlockAudio();
+      if (!audio) return;
       const notes = ok ? [660, 880] : [220, 180];
       notes.forEach((f, i) => {
         const o = audio.createOscillator();
@@ -159,6 +171,7 @@ if (typeof document !== 'undefined') {
   }
   $('#sound-toggle').addEventListener('click', () => {
     data.sound = !data.sound; save(); renderHome();
+    if (data.sound) { unlockAudio(); beep(true); }
   });
 
   /* Välj tabell */
