@@ -29,9 +29,11 @@ Ett roligt sätt för barn att träna **multiplikationstabellerna 1–10**. Gån
 1. Öppna länken ovan i **Chrome**.
 2. Tryck på **Installera appen** på startsidan, eller **⋮ → Installera app**.
 
-**iPhone/iPad (Safari)**
-1. Öppna länken i **Safari**.
-2. Tryck på **Dela** ⬆︎ → **Lägg till på hemskärmen**.
+**iPhone/iPad (Safari eller Chrome)**
+1. Öppna länken i **Safari** eller **Chrome**. Chrome kräver iOS/iPadOS 16.4 eller senare.
+2. Tryck på **Dela** ⬆︎ och välj **Lägg till på hemskärmen**. I Chrome sitter Dela uppe till höger i adressfältet.
+
+Installationen startar aldrig av sig själv på iPhone och iPad, eftersom Apple bara tillåter det via Dela-menyn.
 
 Appen hamnar på hemskärmen som **6×7**, startar i helskärm och fungerar utan internet. Uppdateringar hämtas automatiskt när appen öppnas med internet.
 

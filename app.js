@@ -701,6 +701,18 @@ if (typeof document !== 'undefined') {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!standalone) $('#install-btn').hidden = false;
+  if (isIOS) {
+    // Rätt instruktion beroende på webbläsare (Chrome = CriOS, Firefox = FxiOS, Edge = EdgiOS)
+    const ua = navigator.userAgent;
+    $('#install-help-ios').innerHTML = /CriOS/.test(ua)
+      ? 'Tryck på <b>Dela</b> <span class="ios-share">⬆︎</span> uppe till höger i adressfältet ' +
+        '(eller <b>⋯</b> → <b>Dela</b>) och välj <b>Lägg till på hemskärmen</b>.'
+      : /FxiOS|EdgiOS/.test(ua)
+        ? 'Tryck på menyn <b>☰</b> eller <b>⋯</b> → <b>Dela</b> <span class="ios-share">⬆︎</span> ' +
+          'och välj <b>Lägg till på hemskärmen</b>.'
+        : 'Tryck på <b>Dela</b> <span class="ios-share">⬆︎</span> och välj <b>Lägg till på hemskärmen</b>.' +
+          '<br><small>Se till att <b>Öppna som webbapp</b> är påslaget.</small>';
+  }
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     installEvt = e;
