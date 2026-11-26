@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '17'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '18'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -180,7 +180,7 @@ function newPlayer(name, avatar) {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: cleanName(name), avatar: AVATARS.includes(avatar) ? avatar : AVATARS[0],
     stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, picked: [],
-    goal: { ...DEFAULT_GOAL }, daily: null, goalDays: [],
+    goal: { ...DEFAULT_GOAL }, daily: null, goalDays: [], streakDays: [], bestStreak: 0,
   };
 }
 
@@ -233,17 +233,48 @@ function goalProgress(p, extraMs = 0, date = todayStr()) {
   };
 }
 
+/* Dagar i rad */
+function prevDay(date) {
+  const [y, m, d] = date.split('-').map(Number);
+  return todayStr(new Date(y, m - 1, d - 1)); // Date hanterar månads-/årsskiften och sommartid
+}
+
+// Dag som räknas för sviten: målet nått (eller, utan mål, minst ett rätt svar)
+function markStreakDay(p, date) {
+  p.streakDays = p.streakDays || [];
+  if (!p.streakDays.includes(date)) p.streakDays = p.streakDays.concat(date).slice(-400);
+  p.bestStreak = Math.max(p.bestStreak || 0, streakInfo(p, date).count);
+}
+
+// Sviten lever hela dagen: räknas från idag om dagen är klar, annars från igår.
+function streakInfo(p, date = todayStr()) {
+  const set = new Set(p.streakDays || []);
+  const todayDone = set.has(date);
+  let d = todayDone ? date : prevDay(date);
+  let count = 0;
+  while (set.has(d)) { count++; d = prevDay(d); }
+  return { count, todayDone, best: Math.max(p.bestStreak || 0, count) };
+}
+
+function streakText(n) {
+  return '🔥 ' + n + (n === 1 ? ' dag' : ' dagar') + ' i rad';
+}
+
 // Registrera ett svar. Returnerar true om dagens mål nåddes precis nu.
 function recordDaily(p, ok, ms, date = todayStr()) {
   const d = dailyOf(p, date);
   if (ok) d.right++;
   d.ms += Math.min(Math.max(0, ms), MAX_Q_MS);
-  if (d.done) return false;
   const g = fixGoal(p.goal);
-  if (g.type === 'off') return false;
+  if (g.type === 'off') {
+    if (ok) markStreakDay(p, date);
+    return false;
+  }
+  if (d.done) return false;
   if (goalProgress(p, 0, date).done) {
     d.done = true;
     p.goalDays = (p.goalDays || []).concat(date).slice(-400);
+    markStreakDay(p, date);
     return true;
   }
   return false;
@@ -260,6 +291,8 @@ function loadStore(v2text, v1text) {
         p.records = p.records || { time: 0 };
         p.goal = fixGoal(p.goal);
         p.goalDays = p.goalDays || [];
+        if (!Array.isArray(p.streakDays)) p.streakDays = p.goalDays.slice(); // dagar med nått mål räknas
+        p.bestStreak = p.bestStreak || 0;
       });
       if (!r.players.some((p) => p.id === r.current)) r.current = r.players[0] ? r.players[0].id : null;
       if (typeof r.sound !== 'boolean') r.sound = true;
@@ -281,7 +314,7 @@ function loadStore(v2text, v1text) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -360,6 +393,13 @@ if (typeof document !== 'undefined') {
     $('#goal-card').classList.toggle('done', gp.done);
     $('#goal-text').textContent = gp.text;
     $('#goal-fill').style.width = gp.frac * 100 + '%';
+    const sk = streakInfo(data);
+    const el = $('#streak');
+    el.hidden = sk.count === 0;
+    el.classList.toggle('pending', !sk.todayDone);
+    $('#streak-count').textContent = streakText(sk.count);
+    $('#streak-hint').textContent = sk.todayDone ? '' :
+      (gp.type === 'off' ? 'Öva idag så fortsätter det!' : 'Klara dagens mål så fortsätter det!');
     $('#sound-toggle').textContent = root.sound ? '🔊 Ljud på' : '🔇 Ljud av';
   }
   $('#sound-toggle').addEventListener('click', () => {
@@ -561,7 +601,8 @@ if (typeof document !== 'undefined') {
 
   function celebrateGoal() {
     const t = $('#toast');
-    t.textContent = '🎉 Dagens mål klart, ' + data.name + '!';
+    const s = streakInfo(data);
+    t.textContent = '🎉 Dagens mål klart, ' + data.name + '!' + (s.count > 1 ? '\n' + streakText(s.count) + '!' : '');
     t.classList.add('show');
     confetti();
     if (root.sound) setTimeout(() => beep(true), 150);
@@ -624,7 +665,8 @@ if (typeof document !== 'undefined') {
     $('#stats-summary').innerHTML =
       '<div class="stat-box"><b>' + good + '/100</b><small>kan du</small></div>' +
       '<div class="stat-box"><b>' + (data.records.time || 0) + '</b><small>rekord 60 s</small></div>' +
-      '<div class="stat-box"><b>' + data.stars + '</b><small>stjärnor</small></div>';
+      '<div class="stat-box"><b>' + data.stars + '</b><small>stjärnor</small></div>' +
+      '<div class="stat-box"><b>🔥 ' + streakInfo(data).best + '</b><small>bästa svit</small></div>';
     const g = $('#stats-grid');
     let html = '<div class="hd">×</div>';
     for (let b = 1; b <= 10; b++) html += '<div class="hd">' + b + '</div>';
@@ -798,7 +840,7 @@ if (typeof document !== 'undefined') {
       const d = dailyOf(editing);
       d.done = false;
       editing.goalDays = (editing.goalDays || []).filter((x) => x !== d.date);
-      if (goalProgress(editing).done) { d.done = true; editing.goalDays.push(d.date); }
+      if (goalProgress(editing).done) { d.done = true; editing.goalDays.push(d.date); markStreakDay(editing, d.date); }
     }
     data = editing; root.current = editing.id;
     save();

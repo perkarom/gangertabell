@@ -31,6 +31,8 @@ Varje spelare kan ha ett mål per dag, som man ändrar med ✏️ under **Vem sp
 - **Minuter:** 5, 10, 15, 20 eller 30 minuters övning per dag. Tiden räknas ner medan man övar, och högst 30 sekunder räknas per fråga, så det hjälper inte att lämna appen öppen.
 - **Av**
 
+**🔥 Dagar i rad:** varje dag då målet nås räknas. Utan mål räcker det med ett rätt svar under dagen. Sviten visas på startsidan och finns kvar hela dagen tills målet är nått, och den bästa sviten sparas i statistiken.
+
 Framstegen syns på startsidan och överst när man övar. Rätt svar i alla lägen räknas. När målet är nått blir det konfetti, och vid midnatt börjar räkningen om.
 
 ## Installera på mobilen
