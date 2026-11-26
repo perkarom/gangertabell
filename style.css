@@ -271,3 +271,4 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
   max-width: calc(100% - 32px); text-align: center;
 }
 .toast.show { transform: translate(-50%, 0); visibility: visible; transition: transform .35s cubic-bezier(.2,1.4,.4,1); }
+.app-version { margin: -4px 0 0; text-align: center; color: var(--muted); font-size: .8rem; opacity: .7; }

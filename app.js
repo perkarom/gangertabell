@@ -1,6 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
+const APP_VERSION = '16'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -872,7 +873,17 @@ if (typeof document !== 'undefined') {
     $('#install-help-ios').hidden = true;
   });
 
+  $('#app-version').textContent = 'Version ' + APP_VERSION;
+
   if ('serviceWorker' in navigator) {
+    // Ny version installerad: ladda om en gång så att den syns direkt (inte vid allra första installationen)
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded || (game && $('#view-play').classList.contains('active'))) return;
+      reloaded = true;
+      location.reload();
+    });
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 }

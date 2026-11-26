@@ -98,4 +98,4 @@ node -e 'const L = require("./app.js"); console.log(L.buildRound(L.combos([7])))
 
 ### Publicera en ny version
 
-Appen publiceras med GitHub Pages från grenen `main`. Höj versionen i `CACHE` i `sw.js` när du ändrar något, och pusha. Då hämtar installerade appar den nya versionen nästa gång de öppnas med internet.
+Appen publiceras med GitHub Pages från grenen `main`. Höj versionen i `CACHE` i `sw.js` och `APP_VERSION` i `app.js` när du ändrar något, och pusha. Versionen visas längst ner på startsidan. Då hämtar installerade appar den nya versionen nästa gång de öppnas med internet.
