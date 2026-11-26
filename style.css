@@ -243,3 +243,28 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
 }
 .avatar-grid button.on { border-color: var(--purple); background: #e6e0ff; }
 #edit-save { margin-top: auto; }
+
+/* Dagsmål */
+.goal-card { background: var(--card); border-radius: 18px; padding: 12px 14px; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+.goal-text { font-weight: 800; font-size: 1.1rem; text-align: center; margin-bottom: 8px; }
+.goal-bar { height: 12px; background: var(--none); border-radius: 999px; overflow: hidden; }
+#goal-fill { height: 100%; width: 0; background: var(--purple); border-radius: 999px; transition: width .4s; }
+.goal-card.done #goal-fill { background: var(--good); }
+.goal-line { text-align: center; font-weight: 800; color: var(--muted); margin-top: -6px; }
+.goal-line.done { color: var(--good); }
+.result-goal { margin: -6px 0 6px; font-weight: 800; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.seg button {
+  min-height: 50px; border-radius: 14px; background: var(--card); font-weight: 800; font-size: 1.05rem;
+  box-shadow: 0 3px 0 rgba(0,0,0,.1); border: 3px solid transparent;
+}
+.seg button.on { border-color: var(--purple); background: #e6e0ff; color: #2b2250; }
+.seg-small button { min-height: 44px; font-size: .95rem; padding: 0 2px; }
+.toast {
+  position: fixed; left: 50%; top: max(16px, env(safe-area-inset-top)); z-index: 20;
+  transform: translate(-50%, -150%); transition: transform .35s cubic-bezier(.2,1.4,.4,1);
+  background: var(--good); color: #fff; font-weight: 900; font-size: 1.25rem;
+  padding: 14px 22px; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.2);
+  max-width: calc(100% - 32px); text-align: center;
+}
+.toast.show { transform: translate(-50%, 0); }

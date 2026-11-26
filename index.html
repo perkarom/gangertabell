@@ -24,6 +24,10 @@
         <span id="chip-avatar"></span> <b id="chip-name"></b> <span id="chip-stars"></span> <span class="chip-switch">⇄</span>
       </button>
     </header>
+    <div id="goal-card" class="goal-card" hidden>
+      <div id="goal-text" class="goal-text"></div>
+      <div class="goal-bar"><div id="goal-fill"></div></div>
+    </div>
     <div class="menu">
       <button class="big c1" data-go="pick">🎯 Välj tabell</button>
       <button class="big c2" data-mode="mixed">🎲 Blandat 1–10</button>
@@ -59,6 +63,7 @@
       <div id="play-score" class="score-pill"></div>
     </div>
     <div class="bar"><div id="play-bar"></div></div>
+    <div id="goal-line" class="goal-line" hidden></div>
     <div id="question-card" class="card">
       <div id="question" class="question">7 × 8</div>
       <div id="answer" class="answer">&nbsp;</div>
@@ -79,6 +84,7 @@
       <h2 id="result-title"></h2>
       <p id="result-text" class="result-text"></p>
       <p id="result-extra" class="result-extra"></p>
+      <p id="result-goal" class="result-goal" hidden></p>
       <button id="result-again" class="big c2">Spela igen 🔁</button>
       <button class="big c5" data-go="home">Till start 🏠</button>
     </div>
@@ -118,10 +124,16 @@
            autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done">
     <p class="hint">Välj ett djur</p>
     <div id="avatar-grid" class="avatar-grid"></div>
+    <p class="hint">Dagens mål</p>
+    <div id="goal-type" class="seg">
+      <button data-t="off">Av</button><button data-t="right">Rätt svar</button><button data-t="time">Minuter</button>
+    </div>
+    <div id="goal-value" class="seg seg-small"></div>
     <button id="edit-save" class="big c5" disabled>Klar ✔︎</button>
     <button id="edit-delete" class="small-btn danger" hidden>Ta bort spelare</button>
   </section>
 
+  <div id="toast" class="toast" role="status"></div>
   <div id="confetti"></div>
   <script src="app.js"></script>
 </body>

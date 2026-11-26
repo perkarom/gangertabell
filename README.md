@@ -23,6 +23,16 @@ Ett roligt sätt för barn att träna **multiplikationstabellerna 1–10**. Gån
 - 1–3 stjärnor per omgång, konfetti vid perfekt resultat och nytt rekord.
 - Ljud kan slås av och på, och appen följer mobilens mörka läge.
 
+## Dagens mål
+
+Varje spelare kan ha ett mål per dag, som man ändrar med ✏️ under **Vem spelar?**:
+
+- **Rätt svar:** 20, 30, 50, 75 eller 100 rätt svar per dag. Det är förvalt med 30.
+- **Minuter:** 5, 10, 15, 20 eller 30 minuters övning per dag. Tiden räknas ner medan man övar, och högst 30 sekunder räknas per fråga, så det hjälper inte att lämna appen öppen.
+- **Av**
+
+Framstegen syns på startsidan och överst när man övar. Rätt svar i alla lägen räknas. När målet är nått blir det konfetti, och vid midnatt börjar räkningen om.
+
 ## Installera på mobilen
 
 **Android (Chrome)**

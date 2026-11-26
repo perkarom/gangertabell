@@ -179,7 +179,73 @@ function newPlayer(name, avatar) {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: cleanName(name), avatar: AVATARS.includes(avatar) ? avatar : AVATARS[0],
     stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, picked: [],
+    goal: { ...DEFAULT_GOAL }, daily: null, goalDays: [],
   };
+}
+
+/* Dagsmål */
+const DEFAULT_GOAL = { type: 'right', value: 30 };
+const GOAL_VALUES = { right: [20, 30, 50, 75, 100], time: [5, 10, 15, 20, 30] }; // rätt svar / minuter
+const MAX_Q_MS = 30000; // max tid som räknas per fråga (appen kan ligga öppen utan att man övar)
+
+function todayStr(d = new Date()) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fixGoal(g) {
+  if (g && g.type === 'off') return { type: 'off', value: 0 };
+  if (g && GOAL_VALUES[g.type] && GOAL_VALUES[g.type].includes(g.value)) return { type: g.type, value: g.value };
+  return { ...DEFAULT_GOAL };
+}
+
+// Dagens räkning för spelaren; börjar om från noll när datumet byts.
+function dailyOf(p, date = todayStr()) {
+  if (!p.daily || p.daily.date !== date) p.daily = { date, right: 0, ms: 0, done: false };
+  return p.daily;
+}
+
+function fmtMinSec(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+// extraMs = pågående fråga som ännu inte besvarats (för en levande nedräkning)
+function goalProgress(p, extraMs = 0, date = todayStr()) {
+  const g = fixGoal(p.goal);
+  if (g.type === 'off') return { type: 'off', done: false, frac: 0, short: '', text: '' };
+  const d = dailyOf(p, date);
+  if (g.type === 'right') {
+    const done = d.done || d.right >= g.value;
+    return {
+      type: 'right', done, frac: Math.min(1, d.right / g.value),
+      short: '🎯 ' + Math.min(d.right, g.value) + '/' + g.value,
+      text: done ? '✅ Dagens mål klart! ' + d.right + ' rätt idag' : '🎯 ' + d.right + ' av ' + g.value + ' rätt idag',
+    };
+  }
+  const goalMs = g.value * 60000;
+  const used = d.ms + Math.min(Math.max(0, extraMs), MAX_Q_MS);
+  const done = d.done || used >= goalMs;
+  return {
+    type: 'time', done, frac: Math.min(1, used / goalMs),
+    short: done ? '⏱️ klart!' : '⏱️ ' + fmtMinSec(goalMs - used) + ' kvar',
+    text: done ? '✅ Dagens mål klart! ' + g.value + ' minuter övade' : '⏱️ ' + fmtMinSec(goalMs - used) + ' kvar idag',
+  };
+}
+
+// Registrera ett svar. Returnerar true om dagens mål nåddes precis nu.
+function recordDaily(p, ok, ms, date = todayStr()) {
+  const d = dailyOf(p, date);
+  if (ok) d.right++;
+  d.ms += Math.min(Math.max(0, ms), MAX_Q_MS);
+  if (d.done) return false;
+  const g = fixGoal(p.goal);
+  if (g.type === 'off') return false;
+  if (goalProgress(p, 0, date).done) {
+    d.done = true;
+    p.goalDays = (p.goalDays || []).concat(date).slice(-400);
+    return true;
+  }
+  return false;
 }
 
 // Läser sparad data (v2 = med spelare). Finns bara gammal v1-data blir den en spelare utan namn.
@@ -188,7 +254,12 @@ function loadStore(v2text, v1text) {
   try {
     const r = JSON.parse(v2text);
     if (r && Array.isArray(r.players)) {
-      r.players.forEach((p) => { p.stats = mergeStats(p.stats); p.records = p.records || { time: 0 }; });
+      r.players.forEach((p) => {
+        p.stats = mergeStats(p.stats);
+        p.records = p.records || { time: 0 };
+        p.goal = fixGoal(p.goal);
+        p.goalDays = p.goalDays || [];
+      });
       if (!r.players.some((p) => p.id === r.current)) r.current = r.players[0] ? r.players[0].id : null;
       if (typeof r.sound !== 'boolean') r.sound = true;
       return r;
@@ -209,7 +280,7 @@ function loadStore(v2text, v1text) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -283,6 +354,11 @@ if (typeof document !== 'undefined') {
     $('#chip-avatar').textContent = data.avatar;
     $('#chip-name').textContent = data.name;
     $('#chip-stars').textContent = '⭐ ' + data.stars;
+    const gp = goalProgress(data);
+    $('#goal-card').hidden = gp.type === 'off';
+    $('#goal-card').classList.toggle('done', gp.done);
+    $('#goal-text').textContent = gp.text;
+    $('#goal-fill').style.width = gp.frac * 100 + '%';
     $('#sound-toggle').textContent = root.sound ? '🔊 Ljud på' : '🔇 Ljud av';
   }
   $('#sound-toggle').addEventListener('click', () => {
@@ -376,6 +452,7 @@ if (typeof document !== 'undefined') {
     $('#feedback').innerHTML = '&nbsp;';
     $('#question-card').className = 'card';
     updateHeader();
+    updateGoalLine();
   }
 
   function updateHeader() {
@@ -432,7 +509,9 @@ if (typeof document !== 'undefined') {
     }
     addResult(s, ok);
     data.stats[k] = s;
+    const goalNow = recordDaily(data, ok, ms);
     save();
+    if (goalNow) setTimeout(celebrateGoal, 350);
 
     if (!isRetry) game.answered++;
     if (ok && !isRetry) game.correct++;
@@ -456,12 +535,36 @@ if (typeof document !== 'undefined') {
     }
     beep(ok);
     updateHeader();
+    updateGoalLine();
     const delay = ok ? (game.mode === 'time' ? 450 : 700) : (game.mode === 'time' ? 1100 : 1500);
     setTimeout(() => {
       if (!game || !$('#view-play').classList.contains('active')) return;
       if (game.mode === 'time' && Date.now() >= game.endAt) return;
       nextQuestion();
     }, delay);
+  }
+
+  /* Dagsmål under övningen */
+  function updateGoalLine() {
+    if (!game || !data) return;
+    const live = game.locked ? 0 : Date.now() - game.qStart;
+    const gp = goalProgress(data, live);
+    const el = $('#goal-line');
+    el.hidden = gp.type === 'off';
+    el.textContent = gp.short;
+    el.classList.toggle('done', gp.done);
+  }
+  setInterval(() => {
+    if ($('#view-play').classList.contains('active') && !document.hidden) updateGoalLine();
+  }, 1000);
+
+  function celebrateGoal() {
+    const t = $('#toast');
+    t.textContent = '🎉 Dagens mål klart, ' + data.name + '!';
+    t.classList.add('show');
+    confetti();
+    if (root.sound) setTimeout(() => beep(true), 150);
+    setTimeout(() => t.classList.remove('show'), 3000);
   }
 
   $('#play-quit').addEventListener('click', () => {
@@ -501,6 +604,9 @@ if (typeof document !== 'undefined') {
     $('#result-title').textContent = title;
     $('#result-text').textContent = text;
     $('#result-extra').textContent = extra;
+    const gp = goalProgress(data);
+    $('#result-goal').hidden = gp.type === 'off';
+    $('#result-goal').textContent = gp.text;
     $('#result-again').onclick = () => startGame(g.mode);
     show('result');
   }
@@ -619,6 +725,26 @@ if (typeof document !== 'undefined') {
 
   let editing = null; // spelaren som ändras, eller null för ny
   let editAvatar = AVATARS[0];
+  let editGoal = { ...DEFAULT_GOAL };
+  function renderGoalEdit() {
+    $$('#goal-type button').forEach((b) => b.classList.toggle('on', b.dataset.t === editGoal.type));
+    const box = $('#goal-value');
+    box.innerHTML = '';
+    box.hidden = editGoal.type === 'off';
+    (GOAL_VALUES[editGoal.type] || []).forEach((v) => {
+      const b = document.createElement('button');
+      b.textContent = v + (editGoal.type === 'time' ? ' min' : '');
+      b.classList.toggle('on', v === editGoal.value);
+      b.addEventListener('click', () => { editGoal.value = v; renderGoalEdit(); });
+      box.appendChild(b);
+    });
+  }
+  $$('#goal-type button').forEach((b) => b.addEventListener('click', () => {
+    const t = b.dataset.t;
+    if (t === editGoal.type) return;
+    editGoal = t === 'off' ? { type: 'off', value: 0 } : { type: t, value: t === 'time' ? 10 : 30 };
+    renderGoalEdit();
+  }));
   function openEdit(p) {
     editing = p || null;
     const used = new Set(root.players.map((x) => x.avatar));
@@ -629,7 +755,9 @@ if (typeof document !== 'undefined') {
     $('#edit-delete').hidden = !p || !p.name;
     // Utan namngiven spelare finns inget att gå tillbaka till
     $('#edit-back').hidden = !root.players.some((x) => x.name) || Boolean(p && !p.name);
+    editGoal = p ? fixGoal(p.goal) : { ...DEFAULT_GOAL };
     renderAvatars();
+    renderGoalEdit();
     checkEdit();
     show('edit');
   }
@@ -661,6 +789,15 @@ if (typeof document !== 'undefined') {
     } else {
       editing = newPlayer(name, editAvatar);
       root.players.push(editing);
+    }
+    const oldGoal = fixGoal(editing.goal);
+    editing.goal = fixGoal(editGoal);
+    // nytt mål: räkna om dagens status mot det nya målet (redan gjorda svar och tid räknas)
+    if (oldGoal.type !== editing.goal.type || oldGoal.value !== editing.goal.value) {
+      const d = dailyOf(editing);
+      d.done = false;
+      editing.goalDays = (editing.goalDays || []).filter((x) => x !== d.date);
+      if (goalProgress(editing).done) { d.done = true; editing.goalDays.push(d.date); }
     }
     data = editing; root.current = editing.id;
     save();
