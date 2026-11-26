@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '18'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '19'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -368,7 +368,10 @@ if (typeof document !== 'undefined') {
   }
 
   /* Vyer */
+  let prevView = 'home';
   function show(name) {
+    const cur = document.querySelector('.view.active');
+    if (name === 'help' && cur && cur.id !== 'view-help') prevView = cur.id.replace('view-', '');
     $$('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + name));
     if (name === 'home') renderHome();
     if (name === 'stats') renderStats();
@@ -378,7 +381,11 @@ if (typeof document !== 'undefined') {
   }
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-go]');
-    if (go) { stopTimer(); show(go.dataset.go); }
+    if (go) {
+      stopTimer();
+      show(go.dataset.go);
+      if (go.dataset.go === 'help') openHelp(go.dataset.open);
+    }
     const m = e.target.closest('[data-mode]');
     if (m) startGame(m.dataset.mode);
   });
@@ -916,6 +923,14 @@ if (typeof document !== 'undefined') {
   });
 
   $('#app-version').textContent = 'Version ' + APP_VERSION;
+
+  /* Hjälp: öppna ett visst avsnitt (t.ex. färgerna från statistiken), annars det första */
+  function openHelp(id) {
+    const all = $$('#view-help details');
+    all.forEach((d, i) => { d.open = id ? d.id === id : i === 0; });
+    if (id && $('#' + id)) setTimeout(() => $('#' + id).scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
+  }
+  $('#help-back').addEventListener('click', () => show(prevView || 'home'));
   $('#goal-card').addEventListener('click', () => data && openEdit(data));
 
   if ('serviceWorker' in navigator) {

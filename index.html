@@ -48,7 +48,10 @@
       Tryck på <b>⋮</b> uppe till höger i Chrome och välj <b>Installera app</b> eller <b>Lägg till på startskärmen</b>.
       <br><small>Använder du Samsung Internet: tryck <b>☰</b> → <b>Lägg till sida på</b> → <b>Startskärm</b>.</small>
     </p>
-    <button id="sound-toggle" class="small-btn">🔊 Ljud på</button>
+    <div class="home-foot">
+      <button class="small-btn" data-go="help">❓ Så funkar det</button>
+      <button id="sound-toggle" class="small-btn">🔊 Ljud på</button>
+    </div>
     <p id="app-version" class="app-version"></p>
   </section>
 
@@ -97,7 +100,8 @@
 
   <!-- STATISTIK -->
   <section id="view-stats" class="view">
-    <div class="topbar"><button class="back" data-go="home">‹</button><h2 id="stats-title">Min statistik</h2></div>
+    <div class="topbar"><button class="back" data-go="home">‹</button><h2 id="stats-title">Min statistik</h2>
+      <button class="help-q" data-go="help" data-open="help-colors" aria-label="Vad betyder färgerna?">?</button></div>
     <div id="stats-summary" class="stats-summary"></div>
     <div id="stats-grid" class="stats-grid"></div>
     <div class="legend">
@@ -136,6 +140,128 @@
     <div id="goal-value" class="seg seg-small"></div>
     <button id="edit-save" class="big c5" disabled>Klar ✔︎</button>
     <button id="edit-delete" class="small-btn danger" hidden>Ta bort spelare</button>
+  </section>
+
+  <!-- HJÄLP -->
+  <section id="view-help" class="view">
+    <div class="topbar"><button class="back" id="help-back">‹</button><h2>Så funkar det</h2></div>
+
+    <details id="help-modes" class="help">
+      <summary>🎮 Lägen</summary>
+      <ul>
+        <li><b>🎯 Välj tabell</b>: öva på en eller flera tabeller, t.ex. bara 7:an. 20 frågor.</li>
+        <li><b>🎲 Blandat 1–10</b>: 20 frågor från hela gångertabellen.</li>
+        <li><b>⏱️ Tidsutmaning</b>: så många rätt du hinner på 60 sekunder. Försök slå ditt rekord!</li>
+        <li><b>💪 Öva svåra tal</b>: 20 frågor där talen du brukar svara fel på kommer oftare.</li>
+        <li><b>📊 Min statistik</b>: hela tabellen i färg, så att du ser vad du kan.</li>
+      </ul>
+    </details>
+
+    <details id="help-answer" class="help">
+      <summary>✍️ Så svarar du</summary>
+      <ul>
+        <li>Skriv svaret med sifferknapparna och tryck <b>OK</b>. <b>⌫</b> suddar.</li>
+        <li>Svarar du fel visas rätt svar. Frågan kommer tillbaka <b>3 frågor senare</b>, ibland åt andra hållet (8×7 i stället för 7×8). Det gäller inte i tidsutmaningen.</li>
+        <li>I resultatet räknas bara svar som var rätt direkt.</li>
+        <li><b>‹</b> uppe till vänster avbryter omgången.</li>
+      </ul>
+    </details>
+
+    <details id="help-stars" class="help">
+      <summary>⭐ Stjärnor och rekord</summary>
+      <table class="help-table">
+        <tr><th></th><th>20 frågor</th><th>Tidsutmaning</th></tr>
+        <tr><td>⭐</td><td>60 % rätt (12)</td><td>8 rätt</td></tr>
+        <tr><td>⭐⭐</td><td>85 % rätt (17)</td><td>15 rätt</td></tr>
+        <tr><td>⭐⭐⭐</td><td>alla rätt 👑</td><td>25 rätt</td></tr>
+      </table>
+      <p>Stjärnorna samlas på startsidan. Slår du ditt rekord i tidsutmaningen blir det konfetti.</p>
+    </details>
+
+    <details id="help-colors" class="help">
+      <summary>🟩 Färgerna i statistiken</summary>
+      <p>Färgen på ett tal räknas från de <b>5 senaste svaren</b> på talet. <b>7×8 och 8×7 är samma tal.</b></p>
+      <table class="help-table">
+        <tr><td><i class="sw s-good"></i><b>Kan</b></td><td>Alla senaste svar rätt, minst 3 svar, och i snitt högst 6 sekunder per svar.</td></tr>
+        <tr><td><i class="sw s-ok"></i><b>Nästan</b></td><td>Minst 70 % rätt, men inte riktigt klart än.</td></tr>
+        <tr><td><i class="sw s-bad"></i><b>Svår</b></td><td>Under 70 % rätt.</td></tr>
+        <tr><td><i class="sw s-none"></i><b>Ej övat</b></td><td>Inga svar än.</td></tr>
+      </table>
+      <p>Ett tal blir <b>gult</b> när du</p>
+      <ul>
+        <li>har ett fel bland de senaste svaren (t.ex. 4 av 5 rätt), eller</li>
+        <li>bara har svarat 1–2 gånger, eller</li>
+        <li>svarar rätt men tar mer än 6 sekunder i snitt.</li>
+      </ul>
+      <p>3 av 5 rätt blir rött. <b>"Kan du"</b> överst räknar de gröna rutorna.</p>
+    </details>
+
+    <details id="help-hard" class="help">
+      <summary>💪 Hur "Öva svåra tal" väljer frågor</summary>
+      <p>Alla tal kan komma, men svåra tal kommer mycket oftare. Varje tal får poäng utifrån de 5 senaste svaren:</p>
+      <ul>
+        <li>grundpoäng 1</li>
+        <li><b>+3</b> för varje fel</li>
+        <li><b>−0,4</b> för varje rätt</li>
+        <li><b>+2</b> om du i snitt svarar långsammare än 6 sekunder</li>
+        <li>aldrig övat: 2 poäng, och lägst 0,3</li>
+      </ul>
+      <p>Ju fler poäng, desto oftare kommer talet. Svar från <b>alla lägen</b> räknas. Svarar du rätt 5 gånger i rad kommer talet sällan, och ett nytt fel gör att det kommer oftare igen.</p>
+    </details>
+
+    <details id="help-goal" class="help">
+      <summary>🎯 Dagens mål</summary>
+      <ul>
+        <li>Välj <b>rätt svar</b> (20–100 per dag) eller <b>minuter</b> (5–30 per dag), eller stäng av målet.</li>
+        <li>Ändra målet genom att trycka på målkortet på startsidan, eller på ✏️ vid ditt namn.</li>
+        <li>Rätt svar i alla lägen räknas.</li>
+        <li>Minuterna räknas ner medan du övar. Högst 30 sekunder räknas per fråga, så det hjälper inte att lämna appen öppen.</li>
+        <li>Vid midnatt börjar räkningen om.</li>
+      </ul>
+    </details>
+
+    <details id="help-streak" class="help">
+      <summary>🔥 Dagar i rad</summary>
+      <ul>
+        <li>En dag räknas när du har nått <b>dagens mål</b>. Utan mål räcker det med ett rätt svar.</li>
+        <li>Sviten finns kvar hela dagen. Står den blek på morgonen behöver du klara dagens mål för att den ska fortsätta.</li>
+        <li>Missar du en hel dag börjar sviten om från noll.</li>
+        <li>Din <b>bästa svit</b> sparas i statistiken.</li>
+      </ul>
+    </details>
+
+    <details id="help-players" class="help">
+      <summary>🦊 Spelare</summary>
+      <ul>
+        <li>Flera kan spela på samma telefon. Alla har egen statistik, egna stjärnor, eget rekord och eget mål.</li>
+        <li>Tryck på <b>⇄ Byt</b> vid namnet på startsidan för att byta spelare eller lägga till en ny.</li>
+        <li>Tryck på <b>✏️</b> för att ändra namn, djur eller mål, eller ta bort en spelare.</li>
+      </ul>
+    </details>
+
+    <details id="help-backup" class="help">
+      <summary>💾 Spara och hämta statistik</summary>
+      <ul>
+        <li>Under <b>Min statistik</b>: <b>Spara statistik</b> skapar en fil som du kan lägga i Filer eller Google Drive, eller skicka till dig själv.</li>
+        <li><b>Hämta statistik</b> läser in filen och ersätter statistiken för spelaren som är vald.</li>
+        <li>Spara innan du tar bort appen eller byter telefon. På iPhone och iPad raderas statistiken när appen tas bort.</li>
+      </ul>
+    </details>
+
+    <details id="help-install" class="help">
+      <summary>📲 Installera, uppdatera och ljud</summary>
+      <ul>
+        <li><b>Android:</b> öppna sidan i Chrome och tryck på <b>Installera appen</b>, eller <b>⋮ → Installera app</b>.</li>
+        <li><b>iPhone/iPad:</b> i Safari eller Chrome, tryck på <b>Dela ⬆︎ → Lägg till på hemskärmen</b>.</li>
+        <li>Appen fungerar utan internet. Nya versioner hämtas av sig själv när du har internet, och versionsnumret står längst ner på startsidan.</li>
+        <li><b>Inget ljud?</b> Höj medievolymen. På iPhone hörs inget när ringknappen på sidan står på ljudlöst.</li>
+      </ul>
+    </details>
+
+    <details id="help-privacy" class="help">
+      <summary>🔒 Integritet</summary>
+      <p>Allt sparas bara på den här enheten. Appen skickar ingen data någonstans och har inga konton, ingen reklam och ingen spårning.</p>
+    </details>
   </section>
 
   <div id="toast" class="toast" role="status"></div>

@@ -8,6 +8,9 @@ Ett roligt sätt för barn att träna **multiplikationstabellerna 1–10**. Gån
 
 ## Så tränar man
 
+Alla förklaringar finns också inne i appen under **❓ Så funkar det** på startsidan. Under **Min statistik** finns ett **?** som förklarar färgerna.
+
+
 | Läge | Vad händer |
 |---|---|
 | 🎯 **Välj tabell** | Öva på en eller flera tabeller, t.ex. bara 7:an, eller 6:an och 8:an. |

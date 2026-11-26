@@ -287,3 +287,35 @@ button.goal-card:active { transform: translateY(2px); }
 }
 .streak small { font-size: .85rem; font-weight: 700; color: var(--muted); }
 .streak.pending #streak-count { opacity: .55; }
+
+/* Hjälp */
+.home-foot { margin-top: auto; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.home-foot .small-btn { margin: 0; }
+.help-q {
+  margin-left: auto; width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background: var(--card); color: var(--purple); font-size: 1.4rem; font-weight: 900;
+}
+details.help {
+  background: var(--card); border-radius: 18px; padding: 0 16px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.08); user-select: text; -webkit-user-select: text;
+}
+details.help summary {
+  list-style: none; cursor: pointer; padding: 15px 28px 15px 0; position: relative;
+  font-weight: 900; font-size: 1.15rem;
+}
+details.help summary::-webkit-details-marker { display: none; }
+details.help summary::after {
+  content: '›'; position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+  font-size: 1.6rem; color: var(--muted); transition: transform .2s;
+}
+details.help[open] summary::after { transform: translateY(-50%) rotate(90deg); }
+details.help > :not(summary) { line-height: 1.5; font-weight: 600; }
+details.help ul { margin: 0 0 14px; padding-left: 20px; }
+details.help li { margin: 4px 0; }
+details.help p { margin: 0 0 12px; }
+.help-table { width: 100%; border-collapse: collapse; margin: 0 0 12px; font-size: .95rem; }
+.help-table th { text-align: left; color: var(--muted); font-size: .85rem; padding: 4px 6px; }
+.help-table td { padding: 7px 6px; border-top: 1px solid var(--none); vertical-align: top; }
+.help-table td:first-child { white-space: nowrap; }
+.help-table .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 6px; vertical-align: -2px; }
+details.help { scroll-margin-top: 16px; }
