@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '16'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '17'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -874,6 +874,7 @@ if (typeof document !== 'undefined') {
   });
 
   $('#app-version').textContent = 'Version ' + APP_VERSION;
+  $('#goal-card').addEventListener('click', () => data && openEdit(data));
 
   if ('serviceWorker' in navigator) {
     // Ny version installerad: ladda om en gång så att den syns direkt (inte vid allra första installationen)

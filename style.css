@@ -272,3 +272,10 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
 }
 .toast.show { transform: translate(-50%, 0); visibility: visible; transition: transform .35s cubic-bezier(.2,1.4,.4,1); }
 .app-version { margin: -4px 0 0; text-align: center; color: var(--muted); font-size: .8rem; opacity: .7; }
+button.goal-card { width: 100%; display: block; text-align: center; color: var(--ink); }
+button.goal-card:active { transform: translateY(2px); }
+.goal-edit-hint { margin-top: 6px; font-size: .8rem; font-weight: 700; color: var(--muted); }
+.chip-switch {
+  background: var(--purple); color: #fff !important; border-radius: 999px;
+  padding: 2px 10px; font-size: .9rem; margin-left: 6px;
+}

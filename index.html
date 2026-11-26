@@ -21,13 +21,14 @@
       <img class="logo" src="icons/icon-192.png" alt="">
       <h1>Gångerkungen</h1>
       <button class="player-chip" data-go="players" aria-label="Byt spelare">
-        <span id="chip-avatar"></span> <b id="chip-name"></b> <span id="chip-stars"></span> <span class="chip-switch">⇄</span>
+        <span id="chip-avatar"></span> <b id="chip-name"></b> <span id="chip-stars"></span> <span class="chip-switch">⇄ Byt</span>
       </button>
     </header>
-    <div id="goal-card" class="goal-card" hidden>
+    <button id="goal-card" class="goal-card" hidden aria-label="Ändra dagens mål">
       <div id="goal-text" class="goal-text"></div>
       <div class="goal-bar"><div id="goal-fill"></div></div>
-    </div>
+      <div class="goal-edit-hint">Tryck för att ändra mål ✏️</div>
+    </button>
     <div class="menu">
       <button class="big c1" data-go="pick">🎯 Välj tabell</button>
       <button class="big c2" data-mode="mixed">🎲 Blandat 1–10</button>
