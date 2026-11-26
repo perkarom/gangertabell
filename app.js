@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '19'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '20'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -369,7 +369,9 @@ if (typeof document !== 'undefined') {
 
   /* Vyer */
   let prevView = 'home';
+  let pendingReload = false; // ny version kom under en övning: ladda om när den är klar
   function show(name) {
+    if (pendingReload && name !== 'play' && name !== 'result') { location.reload(); return; }
     const cur = document.querySelector('.view.active');
     if (name === 'help' && cur && cur.id !== 'view-help') prevView = cur.id.replace('view-', '');
     $$('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + name));
@@ -922,7 +924,22 @@ if (typeof document !== 'undefined') {
     $('#install-help-ios').hidden = true;
   });
 
-  $('#app-version').textContent = 'Version ' + APP_VERSION;
+  /* Statusrad längst ner: är appen uppdaterad? */
+  const verEl = $('#app-version');
+  function setUpdateStatus(state) {
+    const txt = {
+      checking: 'Söker efter uppdatering…',
+      ok: '✓ Appen är uppdaterad (v' + APP_VERSION + ')',
+      offline: 'Utan internet · v' + APP_VERSION + ' (appen fungerar ändå)',
+      updating: '🔄 Hämtar ny version…',
+      ready: '🔄 Ny version finns – tryck här',
+    }[state];
+    verEl.textContent = txt;
+    verEl.classList.toggle('ready', state === 'ready');
+    verEl.disabled = state !== 'ready';
+  }
+  verEl.addEventListener('click', () => location.reload());
+  setUpdateStatus(navigator.onLine === false ? 'offline' : 'checking');
 
   /* Hjälp: öppna ett visst avsnitt (t.ex. färgerna från statistiken), annars det första */
   function openHelp(id) {
@@ -938,10 +955,32 @@ if (typeof document !== 'undefined') {
     const hadController = !!navigator.serviceWorker.controller;
     let reloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadController || reloaded || (game && $('#view-play').classList.contains('active'))) return;
+      if (!hadController || reloaded) return;
+      const playing = document.querySelector('#view-play.active, #view-result.active');
+      if (playing) { pendingReload = true; setUpdateStatus('ready'); return; }
       reloaded = true;
       location.reload();
     });
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    // Jämför versionen på nätet med den som körs
+    async function checkUpdate(reg) {
+      if (pendingReload) return;
+      if (navigator.onLine === false) { setUpdateStatus('offline'); return; }
+      setUpdateStatus('checking');
+      try {
+        const res = await fetch('sw.js?x=' + Date.now(), { cache: 'no-store' });
+        const m = (await res.text()).match(/gangertabell-v(\d+)/);
+        if (!m || m[1] === APP_VERSION) { setUpdateStatus('ok'); return; }
+        setUpdateStatus('updating');
+        if (reg) reg.update().catch(() => {});
+      } catch (e) { setUpdateStatus('offline'); }
+    }
+    let swReg = null;
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then((reg) => { swReg = reg; checkUpdate(reg); })
+        .catch(() => checkUpdate(null));
+    });
+    window.addEventListener('online', () => checkUpdate(swReg));
+    window.addEventListener('offline', () => { if (!pendingReload) setUpdateStatus('offline'); });
   }
 }

@@ -271,7 +271,10 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
   padding: 12px 20px; border-radius: 22px; white-space: pre-line; box-shadow: 0 6px 20px rgba(0,0,0,.2); text-align: center;
 }
 .toast.show { transform: translateY(0); visibility: visible; transition: transform .35s cubic-bezier(.2,1.4,.4,1); }
-.app-version { margin: -4px 0 0; text-align: center; color: var(--muted); font-size: .8rem; opacity: .7; }
+.app-version { display: block; margin: -4px auto 0; padding: 6px 12px; border: 0; background: none; font: inherit;
+  text-align: center; color: var(--muted); font-size: .8rem; opacity: .8; }
+.app-version:disabled { cursor: default; }
+.app-version.ready { opacity: 1; color: #fff; background: var(--purple); border-radius: 999px; font-weight: 700; cursor: pointer; }
 button.goal-card { width: 100%; display: block; text-align: center; color: var(--ink); }
 button.goal-card:active { transform: translateY(2px); }
 .goal-edit-hint { margin-top: 6px; font-size: .8rem; font-weight: 700; color: var(--muted); }
