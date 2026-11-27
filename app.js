@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '24';
+const APP_VERSION = '25';
 // Nyheter som visas en gång per spelare efter en uppdatering (bara sådant som rör barnet)
 const NEWS = [
   { v: 21, items: ['📅 I <b>Min statistik</b> ser du nu hur mycket du övat <b>varje dag</b>.'] },
@@ -748,7 +748,7 @@ if (typeof document !== 'undefined') {
     const gp = goalProgress(data);
     $('#result-goal').hidden = gp.type === 'off';
     $('#result-goal').textContent = gp.text;
-    $('#result-again').onclick = () => startGame(g.mode);
+    $('#result-again').onclick = () => (g.mode === 'tables' ? againTables(stars === 3) : startGame(g.mode));
     show('result');
   }
 
@@ -865,6 +865,30 @@ if (typeof document !== 'undefined') {
     }
   });
 
+  /* Spela igen på Välj tabell: kan barnet tabellen (eller fick alla rätt) föreslås en svårare */
+  const tablesText = (ts) => ts.map((t) => t + ':an').join(', ').replace(/, ([^,]*)$/, ' och $1');
+  function againTables(perfect) {
+    const known = data.picked.filter((t) => tableMastered(data.stats, t));
+    if (!known.length && !perfect) return startGame('tables');
+    const toPick = () => {
+      data.picked = data.picked.filter((t) => !known.includes(t)); save();
+      show('pick');
+    };
+    if (known.length) {
+      openModal({
+        icon: '👑', title: 'Du kan redan ' + tablesText(known) + '!',
+        html: (known.length > 1 ? 'De ger' : 'Den ger') + ' <b>inga poäng</b> till dagens mål eller stjärnor.<br>Välj en tabell som inte är helt grön, så växer målet! 💪',
+        yes: 'Välj en annan', no: 'Öva ändå', onYes: toPick, onNo: () => startGame('tables'),
+      });
+    } else {
+      openModal({
+        icon: '🌟', title: 'Alla rätt på ' + tablesText(data.picked) + '!',
+        html: 'Snyggt! Vill du prova en <b>svårare tabell</b>?<br>Klarar du alla rätt några gånger till får tabellen en 👑.',
+        yes: 'Välj en annan', no: 'Kör igen', onYes: toPick, onNo: () => startGame('tables'),
+      });
+    }
+  }
+
   /* Nytt i appen: visas en gång per spelare efter en uppdatering */
   function showNews() {
     if (!data || !$('#view-home').classList.contains('active') || !$('#modal').hidden) return;
@@ -881,8 +905,8 @@ if (typeof document !== 'undefined') {
   }
 
   /* Pop-up */
-  let modalYes = null;
-  function openModal({ icon, title, html, yes, no, onYes }) {
+  let modalYes = null, modalNo = null;
+  function openModal({ icon, title, html, yes, no, onYes, onNo }) {
     $('#modal-icon').textContent = icon || '';
     $('#modal-title').textContent = title;
     $('#modal-text').innerHTML = html;
@@ -890,12 +914,14 @@ if (typeof document !== 'undefined') {
     $('#modal-no').textContent = no || '';
     $('#modal-no').hidden = !no;
     modalYes = onYes || null;
+    modalNo = onNo || null;
     $('#modal').hidden = false;
   }
   function closeModal(yes) {
     $('#modal').hidden = true;
-    if (yes && modalYes) modalYes();
-    modalYes = null;
+    const cb = yes ? modalYes : modalNo;
+    modalYes = null; modalNo = null;
+    if (cb) cb();
     // En ny version väntade på att rutan skulle stängas
     if (pendingReload && $('#view-home').classList.contains('active')) location.reload();
   }
