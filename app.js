@@ -1,11 +1,12 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '23';
+const APP_VERSION = '24';
 // Nyheter som visas en gång per spelare efter en uppdatering (bara sådant som rör barnet)
 const NEWS = [
   { v: 21, items: ['📅 I <b>Min statistik</b> ser du nu hur mycket du övat <b>varje dag</b>.'] },
   { v: 22, items: ['👑 Tabeller du redan kan får en <b>krona</b>. De ger inga poäng – välj en svårare så växer målet!'] },
+  { v: 24, items: ['🔊 Tryck på högtalaren uppe till höger när du övar för att stänga av eller slå på ljudet.'] },
 ];
 function newsFor(seen) {
   return NEWS.filter((n) => n.v > seen).flatMap((n) => n.items);
@@ -472,6 +473,15 @@ if (typeof document !== 'undefined') {
       (gp.type === 'off' ? 'Öva idag så fortsätter det!' : 'Klara dagens mål så fortsätter det!');
     $('#sound-toggle').textContent = root.sound ? '🔊 Ljud på' : '🔇 Ljud av';
   }
+  // Ljud av/på direkt under övningen
+  function renderMute() {
+    $('#mute').textContent = root.sound ? '🔊' : '🔇';
+    $('#mute').classList.toggle('off', !root.sound);
+  }
+  $('#mute').addEventListener('click', () => {
+    root.sound = !root.sound; save(); renderMute();
+    if (root.sound) { unlockAudio(); beep(true); }
+  });
   $('#sound-toggle').addEventListener('click', () => {
     root.sound = !root.sound; save(); renderHome();
     if (root.sound) { unlockAudio(); beep(true); }
@@ -559,6 +569,7 @@ if (typeof document !== 'undefined') {
   function current() { return game.queue[game.idx]; }
 
   function nextQuestion(first) {
+    renderMute();
     if (!first) game.idx++;
     if (game.mode === 'time') {
       if (game.idx >= game.queue.length) game.queue.push(randomQuestion(game.queue[game.queue.length - 1]));
@@ -858,13 +869,14 @@ if (typeof document !== 'undefined') {
   function showNews() {
     if (!data || !$('#view-home').classList.contains('active') || !$('#modal').hidden) return;
     const items = newsFor(data.seenNews);
-    data.seenNews = Number(APP_VERSION);
-    save();
     if (!items.length) return;
+    const who = data;
     openModal({
       icon: '🎉', title: 'Nytt i Gångerkungen!',
       html: '<ul class="news">' + items.map((t) => '<li>' + t + '</li>').join('') + '</ul>',
       yes: 'Coolt! 👍',
+      // Räknas som sedd först när man stänger rutan (försvinner den ändå kommer den igen)
+      onYes: () => { who.seenNews = Number(APP_VERSION); save(); },
     });
   }
 
@@ -884,6 +896,8 @@ if (typeof document !== 'undefined') {
     $('#modal').hidden = true;
     if (yes && modalYes) modalYes();
     modalYes = null;
+    // En ny version väntade på att rutan skulle stängas
+    if (pendingReload && $('#view-home').classList.contains('active')) location.reload();
   }
   $('#modal-yes').addEventListener('click', () => closeModal(true));
   $('#modal-no').addEventListener('click', () => closeModal(false));
@@ -1111,8 +1125,9 @@ if (typeof document !== 'undefined') {
     let reloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!hadController || reloaded) return;
-      const playing = document.querySelector('#view-play.active, #view-result.active');
-      if (playing) { pendingReload = true; setUpdateStatus('ready'); return; }
+      // Inte mitt i en omgång eller medan en ruta (t.ex. nyheterna) är öppen
+      const busy = document.querySelector('#view-play.active, #view-result.active') || !$('#modal').hidden;
+      if (busy) { pendingReload = true; setUpdateStatus('ready'); return; }
       reloaded = true;
       location.reload();
     });

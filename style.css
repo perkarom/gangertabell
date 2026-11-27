@@ -95,6 +95,8 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
   width: 48px; height: 48px; border-radius: 16px; flex: none;
   background: var(--card); font-size: 2rem; line-height: 1; font-weight: 900;
 }
+.back.mute { font-size: 1.4rem; }
+.back.mute.off { opacity: .6; }
 .progress-text { flex: 1; font-weight: 800; font-size: 1.2rem; color: var(--muted); }
 .score-pill {
   background: var(--card); border-radius: 999px; padding: 8px 14px;

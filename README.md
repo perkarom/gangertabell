@@ -26,7 +26,7 @@ Alla förklaringar finns också inne i appen under **❓ Så funkar det** på st
 - Stora sifferknappar direkt på skärmen, så att mobilens tangentbord inte täcker frågan.
 - Svarar man fel visas rätt svar, och samma fråga kommer tillbaka lite senare i omgången.
 - 1–3 stjärnor per omgång, konfetti vid perfekt resultat och nytt rekord.
-- Ljud kan slås av och på, och appen följer mobilens mörka läge.
+- Ljud kan slås av och på, på startsidan eller direkt i spelet med 🔊/🔇. Appen följer mobilens mörka läge.
 
 ## Dagens mål
 
