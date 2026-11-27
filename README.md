@@ -52,7 +52,7 @@ Framstegen syns på startsidan och överst när man övar. Rätt svar i alla lä
 
 Installationen startar aldrig av sig själv på iPhone och iPad, eftersom Apple bara tillåter det via Dela-menyn.
 
-Appen hamnar på hemskärmen som **6×7**, startar i helskärm och fungerar utan internet. Uppdateringar hämtas automatiskt när appen öppnas med internet. Längst ner på startsidan står **✓ Appen är uppdaterad**, **Utan internet** eller **🔄 Ny version finns**. Kommer en ny version mitt i en övning byts den när övningen är klar. Efter en uppdatering med något nytt för barnet visas en gång rutan **🎉 Nytt i Gångerkungen!** (för varje spelare).
+Appen hamnar på hemskärmen som **6×7**, startar i helskärm och fungerar utan internet. Uppdateringar hämtas automatiskt med internet: när appen startar, när den kommer fram på skärmen igen och var 15:e minut medan den är öppen. Man behöver aldrig stänga appen. Längst ner på startsidan står **✓ Appen är uppdaterad**, **Utan internet** eller **🔄 Ny version finns**. Kommer en ny version mitt i en övning byts den när övningen är klar. Efter en uppdatering med något nytt för barnet visas en gång rutan **🎉 Nytt i Gångerkungen!** (för varje spelare).
 
 > På iPhone hörs inget ljud om ringknappen på sidan står på ljudlöst.
 

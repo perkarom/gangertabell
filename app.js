@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '25';
+const APP_VERSION = '26';
 // Nyheter som visas en gång per spelare efter en uppdatering (bara sådant som rör barnet)
 const NEWS = [
   { v: 21, items: ['📅 I <b>Min statistik</b> ser du nu hur mycket du övat <b>varje dag</b>.'] },
@@ -1149,26 +1149,34 @@ if (typeof document !== 'undefined') {
     // Ny version installerad: ladda om en gång så att den syns direkt (inte vid allra första installationen)
     const hadController = !!navigator.serviceWorker.controller;
     let reloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadController || reloaded) return;
-      // Inte mitt i en omgång eller medan en ruta (t.ex. nyheterna) är öppen
-      const busy = document.querySelector('#view-play.active, #view-result.active') || !$('#modal').hidden;
-      if (busy) { pendingReload = true; setUpdateStatus('ready'); return; }
+    const isBusy = () => !!document.querySelector('#view-play.active, #view-result.active') || !$('#modal').hidden;
+    function reloadWhenFree() {
+      if (reloaded) return;
+      if (isBusy()) { pendingReload = true; setUpdateStatus('ready'); return; }
       reloaded = true;
       location.reload();
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // Inte mitt i en omgång eller medan en ruta (t.ex. nyheterna) är öppen
+      if (hadController) reloadWhenFree();
     });
     // Jämför versionen på nätet med den som körs
+    // Körs vid start, när appen kommer fram på skärmen igen och var 15:e minut medan den är öppen
+    let lastCheck = 0, checking = false;
     async function checkUpdate(reg) {
-      if (pendingReload) return;
+      if (pendingReload || reloaded || checking) return;
       if (navigator.onLine === false) { setUpdateStatus('offline'); return; }
-      setUpdateStatus('checking');
+      if (!lastCheck) setUpdateStatus('checking');
+      lastCheck = Date.now(); checking = true;
       try {
         const res = await fetch('sw.js?x=' + Date.now(), { cache: 'no-store' });
         const m = (await res.text()).match(/gangertabell-v(\d+)/);
         if (!m || m[1] === APP_VERSION) { setUpdateStatus('ok'); return; }
         setUpdateStatus('updating');
         if (reg) reg.update().catch(() => {});
-      } catch (e) { setUpdateStatus('offline'); }
+        // Normalt laddar controllerchange om; annars (ingen SW, eller den var redan bytt) gör vi det själva
+        setTimeout(reloadWhenFree, reg ? 8000 : 0);
+      } catch (e) { setUpdateStatus('offline'); } finally { checking = false; }
     }
     let swReg = null;
     window.addEventListener('load', () => {
@@ -1177,6 +1185,10 @@ if (typeof document !== 'undefined') {
         .catch(() => checkUpdate(null));
     });
     window.addEventListener('online', () => checkUpdate(swReg));
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && Date.now() - lastCheck > 60000) checkUpdate(swReg);
+    });
+    setInterval(() => { if (!document.hidden) checkUpdate(swReg); }, 15 * 60000);
     window.addEventListener('offline', () => { if (!pendingReload) setUpdateStatus('offline'); });
   }
 }
