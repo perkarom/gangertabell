@@ -84,7 +84,7 @@ Vanlig HTML, CSS och JavaScript. Inga ramverk och inget byggsteg.
 | `index.html` | Alla vyer (start, välj tabell, övning, resultat, statistik) |
 | `style.css` | Utseende, ljust och mörkt läge |
 | `app.js` | Spellogik, statistik, ljud (Web Audio) och installationsknapp |
-| `sw.js` | Service worker: hämtar från nätet först och använder cachen när man är offline |
+| `sw.js` | Service worker: hämtar från nätet först och använder cachen när man är offline eller servern svarar med fel |
 | `manifest.webmanifest` | Appnamn, ikoner och helskärmsläge |
 | `icons/` | Appikoner (vanlig, maskable och iOS) |
 

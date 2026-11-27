@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '26';
+const APP_VERSION = '27';
 // Nyheter som visas en gång per spelare efter en uppdatering (bara sådant som rör barnet)
 const NEWS = [
   { v: 21, items: ['📅 I <b>Min statistik</b> ser du nu hur mycket du övat <b>varje dag</b>.'] },
