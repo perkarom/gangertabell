@@ -121,6 +121,8 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
 .modal-box h2 { margin: 0; font-size: 1.5rem; }
 .modal-box p { margin: 0 0 6px; font-size: 1.1rem; line-height: 1.45; }
 .modal-box .small-btn { margin-top: 0; }
+.news { text-align: left; margin: 0; padding-left: 1.2em; font-size: 1.05rem; }
+.news li { margin: 0 0 8px; }
 @keyframes modal-fade { from { opacity: 0; } }
 @keyframes modal-pop { from { transform: scale(.8); opacity: 0; } }
 #pick-start { margin-top: auto; }

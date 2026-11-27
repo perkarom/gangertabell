@@ -1,7 +1,15 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '22'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '23';
+// Nyheter som visas en gång per spelare efter en uppdatering (bara sådant som rör barnet)
+const NEWS = [
+  { v: 21, items: ['📅 I <b>Min statistik</b> ser du nu hur mycket du övat <b>varje dag</b>.'] },
+  { v: 22, items: ['👑 Tabeller du redan kan får en <b>krona</b>. De ger inga poäng – välj en svårare så växer målet!'] },
+];
+function newsFor(seen) {
+  return NEWS.filter((n) => n.v > seen).flatMap((n) => n.items);
+} // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -218,6 +226,7 @@ function newPlayer(name, avatar) {
     name: cleanName(name), avatar: AVATARS.includes(avatar) ? avatar : AVATARS[0],
     stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, picked: [],
     goal: { ...DEFAULT_GOAL }, daily: null, goalDays: [], streakDays: [], bestStreak: 0, days: {},
+    seenNews: Number(APP_VERSION), // ny spelare: inga gamla nyheter
   };
 }
 
@@ -339,6 +348,7 @@ function loadStore(v2text, v1text) {
         if (!Array.isArray(p.streakDays)) p.streakDays = p.goalDays.slice(); // dagar med nått mål räknas
         p.bestStreak = p.bestStreak || 0;
         p.days = cleanDays(p.days);
+        if (!Number.isFinite(p.seenNews)) p.seenNews = 20; // fanns före nyhetsrutan
         // Dagens siffror fanns innan dag-för-dag-statistiken: ta med dem
         if (p.daily && p.daily.date && !p.days[p.daily.date] && (p.daily.right || p.daily.ms)) {
           p.days[p.daily.date] = { r: p.daily.right || 0, w: 0, ms: p.daily.ms || 0 };
@@ -364,7 +374,7 @@ function loadStore(v2text, v1text) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { tableMastered, cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { newsFor, NEWS, tableMastered, cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -444,6 +454,7 @@ if (typeof document !== 'undefined') {
 
   function renderHome() {
     if (!data) return;
+    setTimeout(showNews, 400);
     $('#chip-avatar').textContent = data.avatar;
     $('#chip-name').textContent = data.name;
     $('#chip-stars').textContent = '⭐ ' + data.stars;
@@ -843,6 +854,20 @@ if (typeof document !== 'undefined') {
     }
   });
 
+  /* Nytt i appen: visas en gång per spelare efter en uppdatering */
+  function showNews() {
+    if (!data || !$('#view-home').classList.contains('active') || !$('#modal').hidden) return;
+    const items = newsFor(data.seenNews);
+    data.seenNews = Number(APP_VERSION);
+    save();
+    if (!items.length) return;
+    openModal({
+      icon: '🎉', title: 'Nytt i Gångerkungen!',
+      html: '<ul class="news">' + items.map((t) => '<li>' + t + '</li>').join('') + '</ul>',
+      yes: 'Coolt! 👍',
+    });
+  }
+
   /* Pop-up */
   let modalYes = null;
   function openModal({ icon, title, html, yes, no, onYes }) {
@@ -850,10 +875,10 @@ if (typeof document !== 'undefined') {
     $('#modal-title').textContent = title;
     $('#modal-text').innerHTML = html;
     $('#modal-yes').textContent = yes;
-    $('#modal-no').textContent = no;
+    $('#modal-no').textContent = no || '';
+    $('#modal-no').hidden = !no;
     modalYes = onYes || null;
     $('#modal').hidden = false;
-    $('#modal-yes').focus();
   }
   function closeModal(yes) {
     $('#modal').hidden = true;

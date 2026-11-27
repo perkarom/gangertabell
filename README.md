@@ -52,7 +52,7 @@ Framstegen syns på startsidan och överst när man övar. Rätt svar i alla lä
 
 Installationen startar aldrig av sig själv på iPhone och iPad, eftersom Apple bara tillåter det via Dela-menyn.
 
-Appen hamnar på hemskärmen som **6×7**, startar i helskärm och fungerar utan internet. Uppdateringar hämtas automatiskt när appen öppnas med internet. Längst ner på startsidan står **✓ Appen är uppdaterad**, **Utan internet** eller **🔄 Ny version finns**. Kommer en ny version mitt i en övning byts den när övningen är klar.
+Appen hamnar på hemskärmen som **6×7**, startar i helskärm och fungerar utan internet. Uppdateringar hämtas automatiskt när appen öppnas med internet. Längst ner på startsidan står **✓ Appen är uppdaterad**, **Utan internet** eller **🔄 Ny version finns**. Kommer en ny version mitt i en övning byts den när övningen är klar. Efter en uppdatering med något nytt för barnet visas en gång rutan **🎉 Nytt i Gångerkungen!** (för varje spelare).
 
 > På iPhone hörs inget ljud om ringknappen på sidan står på ljudlöst.
 
@@ -105,4 +105,4 @@ node -e 'const L = require("./app.js"); console.log(L.buildRound(L.combos([7])))
 
 ### Publicera en ny version
 
-Appen publiceras med GitHub Pages från grenen `main`. Höj versionen i `CACHE` i `sw.js` och `APP_VERSION` i `app.js` när du ändrar något, och pusha. Längst ner på startsidan står om appen är uppdaterad (den jämför `CACHE` i `sw.js` på nätet med `APP_VERSION`). Då hämtar installerade appar den nya versionen nästa gång de öppnas med internet.
+Appen publiceras med GitHub Pages från grenen `main`. Höj versionen i `CACHE` i `sw.js` och `APP_VERSION` i `app.js` när du ändrar något, och pusha. Finns det något nytt som barnet märker, lägg till en rad i `NEWS` i `app.js` så visas den i nyhetsrutan. Längst ner på startsidan står om appen är uppdaterad (den jämför `CACHE` i `sw.js` på nätet med `APP_VERSION`). Då hämtar installerade appar den nya versionen nästa gång de öppnas med internet.
