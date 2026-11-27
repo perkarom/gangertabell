@@ -103,6 +103,13 @@
     <div class="topbar"><button class="back" data-go="home">‹</button><h2 id="stats-title">Min statistik</h2>
       <button class="help-q" data-go="help" data-open="help-colors" aria-label="Vad betyder färgerna?">?</button></div>
     <div id="stats-summary" class="stats-summary"></div>
+    <div class="days-card">
+      <div class="days-head"><h3>📅 Dag för dag</h3>
+        <button class="help-q" data-go="help" data-open="help-days" aria-label="Om dag för dag">?</button></div>
+      <p id="days-week" class="days-week"></p>
+      <div id="days-chart" class="days-chart" aria-hidden="true"></div>
+      <ul id="days-list" class="days-list"></ul>
+    </div>
     <div id="stats-grid" class="stats-grid"></div>
     <div class="legend">
       <span><i class="sw s-good"></i>Kan</span>
@@ -220,6 +227,17 @@
       </ul>
     </details>
 
+    <details id="help-days" class="help">
+      <summary>📅 Dag för dag</summary>
+      <ul>
+        <li>I <b>Min statistik</b> ser du hur mycket du har övat de senaste 14 dagarna.</li>
+        <li>Varje stapel är en dag: <b>grönt</b> är rätt svar och <b>rött</b> är fel svar. Siffran ovanför är antal rätt.</li>
+        <li>✅ betyder att du nådde dagens mål den dagen. Bokstaven för idag har en ram.</li>
+        <li>Under staplarna står dagarna du övat, med rätt, fel, hur stor del som var rätt och hur länge du övade (högst 30 sekunder räknas per fråga).</li>
+        <li>Svar från alla lägen räknas. Dagarna sparas i ett år och följer med när du sparar statistiken till en fil.</li>
+        <li>Dag-för-dag-statistiken började sparas i version 21, så äldre dagar syns inte.</li>
+      </ul>
+    </details>
     <details id="help-streak" class="help">
       <summary>🔥 Dagar i rad</summary>
       <ul>

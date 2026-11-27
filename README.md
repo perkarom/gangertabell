@@ -17,7 +17,7 @@ Alla förklaringar finns också inne i appen under **❓ Så funkar det** på st
 | 🎲 **Blandat 1–10** | 20 frågor från hela gångertabellen. |
 | ⏱️ **Tidsutmaning** | Så många rätt som möjligt på 60 sekunder. Försök slå ditt rekord! |
 | 💪 **Öva svåra tal** | Tal du ofta svarar fel på eller tänker länge på kommer oftare. |
-| 📊 **Min statistik** | Hela tabellen i färg: grönt = kan, gult = nästan, rött = svår. |
+| 📊 **Min statistik** | Hela tabellen i färg: grönt = kan, gult = nästan, rött = svår. Dessutom **📅 dag för dag**: staplar för de senaste 14 dagarna med rätt och fel svar, övad tid och dagar med nått mål. |
 
 **Spelare:** första gången får man skriva sitt namn och välja ett djur. Flera barn kan spela på samma telefon. Tryck på namnet på startsidan för att byta spelare eller lägga till en ny. Varje spelare har egen statistik, egna stjärnor och eget rekord.
 

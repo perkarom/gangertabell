@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '20'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '21'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -139,7 +139,7 @@ function level(s) {
 function makeBackup(d) {
   return {
     app: 'gangerkungen', version: 1, saved: new Date().toISOString(),
-    stats: d.stats, records: d.records, stars: d.stars, totalRight: d.totalRight,
+    stats: d.stats, records: d.records, stars: d.stars, totalRight: d.totalRight, days: d.days || {},
   };
 }
 
@@ -164,7 +164,38 @@ function parseBackup(text) {
     records: { time: num(b.records && b.records.time) },
     stars: num(b.stars),
     totalRight: num(b.totalRight),
+    days: cleanDays(b.days),
   };
+}
+
+/* Dag för dag: { 'ÅÅÅÅ-MM-DD': { r: rätt, w: fel, ms: övad tid } } */
+const DAYS_KEEP = 365;
+function cleanDays(days) {
+  const out = {};
+  if (!days || typeof days !== 'object') return out;
+  const num = (x) => (Number.isFinite(x) && x >= 0 ? Math.round(x) : 0);
+  for (const [k, v] of Object.entries(days)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v || typeof v !== 'object') continue;
+    out[k] = { r: num(v.r), w: num(v.w), ms: num(v.ms) };
+  }
+  return trimDays(out);
+}
+function trimDays(days) {
+  const keys = Object.keys(days).sort();
+  keys.slice(0, Math.max(0, keys.length - DAYS_KEEP)).forEach((k) => delete days[k]);
+  return days;
+}
+// De senaste n dagarna (äldst först), även dagar utan övning
+function daySummary(p, n, date = todayStr()) {
+  const goals = new Set(p.goalDays || []);
+  const out = [];
+  let d = date;
+  for (let i = 0; i < n; i++) {
+    const v = (p.days && p.days[d]) || { r: 0, w: 0, ms: 0 };
+    out.unshift({ date: d, r: v.r, w: v.w, ms: v.ms, goal: goals.has(d) });
+    d = prevDay(d);
+  }
+  return out;
 }
 
 /* Spelare */
@@ -180,7 +211,7 @@ function newPlayer(name, avatar) {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: cleanName(name), avatar: AVATARS.includes(avatar) ? avatar : AVATARS[0],
     stats: {}, records: { time: 0 }, stars: 0, totalRight: 0, picked: [],
-    goal: { ...DEFAULT_GOAL }, daily: null, goalDays: [], streakDays: [], bestStreak: 0,
+    goal: { ...DEFAULT_GOAL }, daily: null, goalDays: [], streakDays: [], bestStreak: 0, days: {},
   };
 }
 
@@ -263,8 +294,14 @@ function streakText(n) {
 // Registrera ett svar. Returnerar true om dagens mål nåddes precis nu.
 function recordDaily(p, ok, ms, date = todayStr()) {
   const d = dailyOf(p, date);
+  const used = Math.min(Math.max(0, ms), MAX_Q_MS);
   if (ok) d.right++;
-  d.ms += Math.min(Math.max(0, ms), MAX_Q_MS);
+  d.ms += used;
+  p.days = p.days || {};
+  const day = p.days[date] || (p.days[date] = { r: 0, w: 0, ms: 0 });
+  if (ok) day.r++; else day.w++;
+  day.ms += used;
+  if (Object.keys(p.days).length > DAYS_KEEP) trimDays(p.days);
   const g = fixGoal(p.goal);
   if (g.type === 'off') {
     if (ok) markStreakDay(p, date);
@@ -293,6 +330,11 @@ function loadStore(v2text, v1text) {
         p.goalDays = p.goalDays || [];
         if (!Array.isArray(p.streakDays)) p.streakDays = p.goalDays.slice(); // dagar med nått mål räknas
         p.bestStreak = p.bestStreak || 0;
+        p.days = cleanDays(p.days);
+        // Dagens siffror fanns innan dag-för-dag-statistiken: ta med dem
+        if (p.daily && p.daily.date && !p.days[p.daily.date] && (p.daily.right || p.daily.ms)) {
+          p.days[p.daily.date] = { r: p.daily.right || 0, w: 0, ms: p.daily.ms || 0 };
+        }
       });
       if (!r.players.some((p) => p.id === r.current)) r.current = r.players[0] ? r.players[0].id : null;
       if (typeof r.sound !== 'boolean') r.sound = true;
@@ -314,7 +356,7 @@ function loadStore(v2text, v1text) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -686,10 +728,52 @@ if (typeof document !== 'undefined') {
       }
     }
     g.innerHTML = html;
+    renderDays();
+  }
+
+  /* Dag för dag */
+  const WD = ['S', 'M', 'T', 'O', 'T', 'F', 'L'];
+  const WDLONG = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör'];
+  const MON = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+  const dateOf = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const mins = (ms) => { const m = Math.round(ms / 60000); return ms > 0 && m < 1 ? '<1 min' : m + ' min'; };
+  function dayLabel(s, today) {
+    if (s === today) return 'Idag';
+    if (s === prevDay(today)) return 'Igår';
+    const d = dateOf(s);
+    return WDLONG[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+  }
+  function renderDays() {
+    const today = todayStr();
+    const days = daySummary(data, 14, today);
+    const week = days.slice(-7);
+    const wr = week.reduce((t, d) => t + d.r, 0);
+    const wms = week.reduce((t, d) => t + d.ms, 0);
+    const wn = week.filter((d) => d.r + d.w > 0).length;
+    const any = days.some((d) => d.r + d.w > 0);
+    $('#days-week').innerHTML = any
+      ? 'Senaste 7 dagarna: <b>' + wr + ' rätt</b> · ' + mins(wms) + ' · ' + wn + (wn === 1 ? ' dag' : ' dagar') + ' övade'
+      : 'Här ser du hur mycket du övar varje dag. Börja öva så kommer första stapeln!';
+    const max = Math.max(10, ...days.map((d) => d.r + d.w));
+    $('#days-chart').innerHTML = days.map((d) => {
+      const tot = d.r + d.w;
+      return '<div class="day' + (d.date === today ? ' today' : '') + '">' +
+        '<span class="day-goal">' + (d.goal ? '✅' : '') + '</span>' +
+        '<span class="day-n">' + (tot ? d.r : '') + '</span>' +
+        '<div class="day-bar" style="height:' + (tot / max * 100).toFixed(1) + '%">' +
+        (d.w ? '<i class="w" style="flex:' + d.w + '"></i>' : '') + (d.r ? '<i class="r" style="flex:' + d.r + '"></i>' : '') + '</div>' +
+        '<span class="day-wd">' + WD[dateOf(d.date).getDay()] + '</span></div>';
+    }).join('');
+    $('#days-chart').hidden = !any;
+    $('#days-list').innerHTML = days.filter((d) => d.r + d.w > 0).reverse().map((d) => {
+      const pct = Math.round(d.r / (d.r + d.w) * 100);
+      return '<li><b>' + dayLabel(d.date, today) + '</b><span>' + d.r + ' rätt · ' + d.w + ' fel · ' + pct + ' % · ' +
+        mins(d.ms) + (d.goal ? ' ✅' : '') + '</span></li>';
+    }).join('');
   }
   $('#stats-reset').addEventListener('click', () => {
     if (!confirm('Vill du verkligen nollställa all statistik, rekord och stjärnor?')) return;
-    data.stats = {}; data.records = { time: 0 }; data.stars = 0; data.totalRight = 0;
+    data.stats = {}; data.records = { time: 0 }; data.stars = 0; data.totalRight = 0; data.days = {};
     save(); renderStats();
   });
 

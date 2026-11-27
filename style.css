@@ -165,6 +165,23 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
 .stat-box { background: var(--card); border-radius: 16px; padding: 10px 6px; text-align: center; }
 .stat-box b { display: block; font-size: 1.5rem; }
 .stat-box small { color: var(--muted); font-weight: 700; }
+.days-card { background: var(--card); border-radius: 16px; padding: 12px; margin-top: 10px; }
+.days-head { display: flex; align-items: center; justify-content: space-between; }
+.days-head h3 { margin: 0; font-size: 1.05rem; }
+.days-week { margin: 6px 0 4px; color: var(--muted); font-size: .9rem; }
+.days-week b { color: var(--ink); }
+.days-chart { display: flex; align-items: flex-end; gap: 3px; height: 130px; padding-top: 4px; }
+.day { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.day-goal { font-size: .62rem; line-height: 1; min-height: .7rem; }
+.day-n { font-size: .62rem; font-weight: 800; color: var(--muted); line-height: 1.2; min-height: .75rem; }
+.day-bar { width: 100%; max-width: 20px; min-height: 0; display: flex; flex-direction: column; border-radius: 5px 5px 2px 2px; overflow: hidden; background: var(--none); }
+.day-bar .r { background: var(--good); }
+.day-bar .w { background: var(--bad); }
+.day-wd { font-size: .7rem; font-weight: 700; color: var(--muted); margin-top: 3px; padding: 0 3px; border-radius: 6px; }
+.day.today .day-wd { color: var(--ink); outline: 2px solid var(--purple); }
+.days-list { list-style: none; margin: 10px 0 0; padding: 0; font-size: .88rem; }
+.days-list li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--none); }
+.days-list li span { color: var(--muted); text-align: right; }
 .stats-grid { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; }
 .stats-grid div {
   aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center;
