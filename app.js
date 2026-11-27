@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '21'; // höj tillsammans med CACHE i sw.js
+const APP_VERSION = '22'; // höj tillsammans med CACHE i sw.js
 const ROUND_LEN = 20;
 const TIME_LIMIT = 60; // sekunder
 const SLOW_MS = 6000;
@@ -198,6 +198,12 @@ function daySummary(p, n, date = todayStr()) {
   return out;
 }
 
+// En tabell är "kunnad" när alla 10 tal i den är gröna
+function tableMastered(stats, t) {
+  for (let b = 1; b <= 10; b++) if (level(stats[skey(t, b)]) !== 'good') return false;
+  return true;
+}
+
 /* Spelare */
 const AVATARS = ['🦁', '🐯', '🐼', '🦊', '🐸', '🐵', '🦄', '🐲', '🐬', '🦖', '🐱', '🐶', '🐰', '🐨', '🐧', '🐙'];
 const NAME_MAX = 12;
@@ -292,16 +298,18 @@ function streakText(n) {
 }
 
 // Registrera ett svar. Returnerar true om dagens mål nåddes precis nu.
-function recordDaily(p, ok, ms, date = todayStr()) {
-  const d = dailyOf(p, date);
+// counts = false: tabell som barnet redan kan, syns i dag-för-dag men ger inga poäng till målet/sviten
+function recordDaily(p, ok, ms, date = todayStr(), counts = true) {
   const used = Math.min(Math.max(0, ms), MAX_Q_MS);
-  if (ok) d.right++;
-  d.ms += used;
   p.days = p.days || {};
   const day = p.days[date] || (p.days[date] = { r: 0, w: 0, ms: 0 });
   if (ok) day.r++; else day.w++;
   day.ms += used;
   if (Object.keys(p.days).length > DAYS_KEEP) trimDays(p.days);
+  if (!counts) return false;
+  const d = dailyOf(p, date);
+  if (ok) d.right++;
+  d.ms += used;
   const g = fixGoal(p.goal);
   if (g.type === 'off') {
     if (ok) markStreakDay(p, date);
@@ -356,7 +364,7 @@ function loadStore(v2text, v1text) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { tableMastered, cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -467,11 +475,21 @@ if (typeof document !== 'undefined') {
     for (let i = 1; i <= 10; i++) {
       const b = document.createElement('button');
       b.textContent = i;
+      const crown = tableMastered(data.stats, i);
+      b.classList.toggle('crown', crown);
       b.classList.toggle('on', picked.has(i));
       b.addEventListener('click', () => {
         picked.has(i) ? picked.delete(i) : picked.add(i);
         b.classList.toggle('on', picked.has(i));
         $('#pick-start').disabled = picked.size === 0;
+        if (crown && picked.has(i)) {
+          openModal({
+            icon: '👑', title: 'Du kan redan ' + i + ':an!',
+            html: 'Den ger <b>inga poäng</b> till dagens mål eller stjärnor.<br>Välj en tabell som inte är helt grön, så växer målet! 💪',
+            yes: 'Välj en annan', no: 'Öva ändå',
+            onYes: () => { picked.delete(i); b.classList.remove('on'); $('#pick-start').disabled = picked.size === 0; },
+          });
+        }
       });
       g.appendChild(b);
     }
@@ -489,6 +507,7 @@ if (typeof document !== 'undefined') {
   function startGame(mode) {
     stopTimer();
     game = { mode, idx: 0, correct: 0, answered: 0, input: '', locked: false, reinserted: new Set(), start: Date.now() };
+    game.noPoints = new Set(mode === 'tables' ? data.picked.filter((t) => tableMastered(data.stats, t)) : []);
     if (mode === 'tables') game.queue = buildRound(combos(data.picked));
     else if (mode === 'mixed') game.queue = buildRound(combos([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
     else if (mode === 'hard') game.queue = buildHardRound(data.stats);
@@ -601,7 +620,7 @@ if (typeof document !== 'undefined') {
     }
     addResult(s, ok);
     data.stats[k] = s;
-    const goalNow = recordDaily(data, ok, ms);
+    const goalNow = recordDaily(data, ok, ms, undefined, !game.noPoints.has(q.a));
     save();
     if (goalNow) setTimeout(celebrateGoal, 350);
 
@@ -640,11 +659,13 @@ if (typeof document !== 'undefined') {
   function updateGoalLine() {
     if (!game || !data) return;
     const live = game.locked ? 0 : Date.now() - game.qStart;
-    const gp = goalProgress(data, live);
+    const q = current();
+    const noPts = q && game.noPoints && game.noPoints.has(q.a);
+    const gp = goalProgress(data, noPts ? 0 : live);
     const el = $('#goal-line');
-    el.hidden = gp.type === 'off';
-    el.textContent = gp.short;
-    el.classList.toggle('done', gp.done);
+    el.hidden = gp.type === 'off' && !noPts;
+    el.textContent = noPts ? '👑 ger inga poäng' : gp.short;
+    el.classList.toggle('done', gp.done && !noPts);
   }
   setInterval(() => {
     if ($('#view-play').classList.contains('active') && !document.hidden) updateGoalLine();
@@ -684,10 +705,15 @@ if (typeof document !== 'undefined') {
     } else {
       stars = starsFor(g.correct, g.total);
       const secs = Math.round((Date.now() - g.start) / 1000);
+      const allKnown = g.mode === 'tables' && data.picked.length > 0 && data.picked.every((t) => g.noPoints.has(t));
       title = ['Bra kämpat, ', 'Bra jobbat, ', 'Jättebra, ', 'Du är gångerkungen, '][stars] + data.name + '! ' + ['💪', '👍', '🌟', '👑'][stars];
       text = g.correct + ' av ' + g.total + ' rätt direkt';
       extra = 'Tid: ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
-      if (stars === 3) confetti();
+      if (allKnown) {
+        stars = 0;
+        title = 'Bra repeterat, ' + data.name + '! 👑';
+        extra = '👑 Du kunde redan de här, så de ger inga stjärnor. Prova en svårare tabell!';
+      } else if (stars === 3) confetti();
     }
     data.stars += stars;
     save();
@@ -816,6 +842,26 @@ if (typeof document !== 'undefined') {
       alert(err.message || 'Filen gick inte att läsa.');
     }
   });
+
+  /* Pop-up */
+  let modalYes = null;
+  function openModal({ icon, title, html, yes, no, onYes }) {
+    $('#modal-icon').textContent = icon || '';
+    $('#modal-title').textContent = title;
+    $('#modal-text').innerHTML = html;
+    $('#modal-yes').textContent = yes;
+    $('#modal-no').textContent = no;
+    modalYes = onYes || null;
+    $('#modal').hidden = false;
+    $('#modal-yes').focus();
+  }
+  function closeModal(yes) {
+    $('#modal').hidden = true;
+    if (yes && modalYes) modalYes();
+    modalYes = null;
+  }
+  $('#modal-yes').addEventListener('click', () => closeModal(true));
+  $('#modal-no').addEventListener('click', () => closeModal(false));
 
   /* Konfetti */
   function confetti() {

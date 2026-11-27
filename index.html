@@ -227,6 +227,16 @@
       </ul>
     </details>
 
+    <details id="help-crown" class="help">
+      <summary>👑 Tabeller du redan kan</summary>
+      <ul>
+        <li>När alla 10 tal i en tabell är <b>gröna</b> kan du den. Då får den en 👑 i <b>Välj tabell</b>.</li>
+        <li>En tabell med 👑 ger <b>inga poäng</b>: den räknas inte till dagens mål eller dagar i rad, och om du bara övar på sådana tabeller blir det inga stjärnor.</li>
+        <li>Du får gärna öva ändå för att repetera. Svaren syns i <b>Dag för dag</b> och i färgerna.</li>
+        <li>Blir ett tal gult eller rött igen förlorar tabellen sin 👑 och ger poäng igen.</li>
+        <li>I <b>Blandat</b>, <b>Öva svåra tal</b> och <b>Tidsutmaning</b> räknas alla svar som vanligt.</li>
+      </ul>
+    </details>
     <details id="help-days" class="help">
       <summary>📅 Dag för dag</summary>
       <ul>
@@ -283,6 +293,15 @@
   </section>
 
   <div id="toast" class="toast" role="status"></div>
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div id="modal-icon" class="modal-icon"></div>
+      <h2 id="modal-title"></h2>
+      <p id="modal-text"></p>
+      <button id="modal-yes" class="big c5"></button>
+      <button id="modal-no" class="small-btn"></button>
+    </div>
+  </div>
   <div id="confetti"></div>
   <script src="app.js"></script>
 </body>
