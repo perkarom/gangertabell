@@ -19,7 +19,7 @@ Alla förklaringar finns också inne i appen under **❓ Så funkar det** på st
 | 💪 **Öva svåra tal** | Tal du ofta svarar fel på eller tänker länge på kommer oftare. |
 | 📊 **Min statistik** | Hela tabellen i färg: grönt = kan, gult = nästan, rött = svår. Dessutom **📅 dag för dag**: staplar för de senaste 14 dagarna med rätt och fel svar, övad tid och dagar med nått mål. |
 
-**👑 Tabeller man redan kan:** när alla 10 tal i en tabell är gröna får den en krona i Välj tabell och ger inga poäng (dagens mål, dagar i rad, stjärnor). Väljer barnet en sådan tabell, eller trycker Spela igen på den, kommer en pop-up som föreslår en svårare. Efter en omgång med alla rätt föreslås också en svårare tabell. Blandat, svåra tal och tidsutmaningen räknas som vanligt.
+**👑 Tabeller man redan kan:** i Välj tabell står under varje siffra hur många av tabellens 10 tal som är gröna (t.ex. **6/10**). Ett tal blir grönt när de senaste svaren (minst 3) är rätt och snittiden är högst 6 sekunder, så det krävs ungefär tre felfria omgångar. När alla 10 tal i en tabell är gröna får den en krona i Välj tabell och ger inga poäng (dagens mål, dagar i rad, stjärnor). Väljer barnet en sådan tabell, eller trycker Spela igen på den, kommer en pop-up som föreslår en svårare. Efter en omgång med alla rätt föreslås också en svårare tabell. Blandat, svåra tal och tidsutmaningen räknas som vanligt.
 
 **Spelare:** första gången får man skriva sitt namn och välja ett djur. Flera barn kan spela på samma telefon. Tryck på namnet på startsidan för att byta spelare eller lägga till en ny. Varje spelare har egen statistik, egna stjärnor och eget rekord.
 

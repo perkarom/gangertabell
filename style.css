@@ -111,7 +111,9 @@ h2 { margin: 0; font-size: 1.5rem; font-weight: 900; }
   font-size: 1.8rem; font-weight: 900; box-shadow: 0 4px 0 rgba(0,0,0,.1);
 }
 .pick-grid button.on { background: var(--purple); color: #fff; box-shadow: 0 4px 0 #4a2fc4; }
-.pick-grid button { position: relative; }
+.pick-grid button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.pick-grid button .prog { font-size: .72rem; font-weight: 800; color: var(--muted); margin-top: 3px; }
+.pick-grid button.on .prog { color: #fff; opacity: .9; }
 .pick-grid button.crown::after { content: '👑'; position: absolute; top: -9px; right: -5px; font-size: 1.05rem; transform: rotate(18deg); }
 .modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px;
   background: rgba(20, 12, 50, .55); animation: modal-fade .2s ease; }

@@ -1,12 +1,13 @@
 'use strict';
 
 /* ---------- Konstanter & ren logik (testbar i node) ---------- */
-const APP_VERSION = '27';
+const APP_VERSION = '28';
 // Nyheter som visas en gång per spelare efter en uppdatering (bara sådant som rör barnet)
 const NEWS = [
   { v: 21, items: ['📅 I <b>Min statistik</b> ser du nu hur mycket du övat <b>varje dag</b>.'] },
   { v: 22, items: ['👑 Tabeller du redan kan får en <b>krona</b>. De ger inga poäng – välj en svårare så växer målet!'] },
   { v: 24, items: ['🔊 Tryck på högtalaren uppe till höger när du övar för att stänga av eller slå på ljudet.'] },
+  { v: 28, items: ['🟢 I <b>Välj tabell</b> ser du hur många tal som är gröna, t.ex. <b>6/10</b>. Vid 10/10 får tabellen en 👑!'] },
 ];
 function newsFor(seen) {
   return NEWS.filter((n) => n.v > seen).flatMap((n) => n.items);
@@ -208,9 +209,13 @@ function daySummary(p, n, date = todayStr()) {
 }
 
 // En tabell är "kunnad" när alla 10 tal i den är gröna
+function tableGreen(stats, t) {
+  let n = 0;
+  for (let b = 1; b <= 10; b++) if (level(stats[skey(t, b)]) === 'good') n++;
+  return n;
+}
 function tableMastered(stats, t) {
-  for (let b = 1; b <= 10; b++) if (level(stats[skey(t, b)]) !== 'good') return false;
-  return true;
+  return tableGreen(stats, t) === 10;
 }
 
 /* Spelare */
@@ -375,7 +380,7 @@ function loadStore(v2text, v1text) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { newsFor, NEWS, tableMastered, cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
+  module.exports = { newsFor, NEWS, tableGreen, tableMastered, cleanDays, trimDays, daySummary, prevDay, markStreakDay, streakInfo, streakText, todayStr, fixGoal, dailyOf, goalProgress, recordDaily, fmtMinSec, GOAL_VALUES, AVATARS, cleanName, newPlayer, loadStore, makeBackup, parseBackup, combos, buildRound, buildHardRound, randomQuestion, starsFor, level, weightFor, key, skey, recentOf, addResult, mergeStats };
 }
 
 /* ---------- UI ---------- */
@@ -495,8 +500,10 @@ if (typeof document !== 'undefined') {
     g.innerHTML = '';
     for (let i = 1; i <= 10; i++) {
       const b = document.createElement('button');
-      b.textContent = i;
-      const crown = tableMastered(data.stats, i);
+      const green = tableGreen(data.stats, i);
+      const crown = green === 10;
+      b.innerHTML = i + (crown ? '' : '<small class="prog">' + green + '/10</small>');
+      b.setAttribute('aria-label', i + ':an, ' + green + ' av 10 gröna');
       b.classList.toggle('crown', crown);
       b.classList.toggle('on', picked.has(i));
       b.addEventListener('click', () => {
